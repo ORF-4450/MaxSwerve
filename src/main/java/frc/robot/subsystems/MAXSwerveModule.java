@@ -21,6 +21,7 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import com.revrobotics.SparkMaxAbsoluteEncoder.Type;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.CANSparkBase.IdleMode;
 import com.revrobotics.RelativeEncoder;
 
 import frc.robot.Constants.ModuleConstants;
@@ -237,7 +238,7 @@ public class MAXSwerveModule {
       if (RobotBase.isReal())
           rot = new Rotation2d(m_turningEncoder.getPosition());
       else
-          rot = new Rotation2d(currentSimAngle);
+          rot = new Rotation2d(currentSimAngle - m_chassisAngularOffset);
 
       SmartDashboard.putNumber(moduleLocation + " hdng", rot.getDegrees());
 
@@ -252,5 +253,13 @@ public class MAXSwerveModule {
   public Translation2d getTranslation2d() 
   {
       return translation2d;
+  }
+
+  public void setBrakeMode(boolean on)
+  {
+    if (on)
+      m_drivingSparkMax.setIdleMode(IdleMode.kBrake);
+    else
+      m_drivingSparkMax.setIdleMode(IdleMode.kCoast);
   }
 }

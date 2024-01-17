@@ -64,6 +64,8 @@ public class DriveSubsystem extends SubsystemBase {
   private ChassisSpeeds m_chassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
 
   private Pose2d        lastPose;
+  private double        distanceTraveled, yawAngle, lastYawAngle;
+  private boolean       fieldRelative, currentBrakeMode = false;
 
   // Field2d object creates the field display on the simulation and gives us an API
   // to control what is displayed (the simulated robot).
@@ -139,8 +141,23 @@ public class DriveSubsystem extends SubsystemBase {
 
     SmartDashboard.putString("robot pose", currentPose.toString());
 
-    //Transform2d poseOffset = currentPose.minus(lastPose);
+    Transform2d poseOffset = currentPose.minus(lastPose);
     
+    double currentDistance = poseOffset.getX() + poseOffset.getY();
+    //double currentDistance = Math.sqrt(Math.pow(poseOffset.getX(), 2) + Math.pow(poseOffset.getY(), 2));
+
+    distanceTraveled += currentDistance;
+
+    SmartDashboard.putNumber("Distance Traveled(m)", distanceTraveled);
+    
+    // Track gyro yaw to support simulation of resettable yaw.
+
+    yawAngle += m_navx.getAngle() - lastYawAngle;
+
+    lastYawAngle = m_navx.getAngle();
+
+    SmartDashboard.putNumber("Yaw Angle", getYaw());
+
     lastPose = currentPose;
 
     field2d.setRobotPose(currentPose);
@@ -224,6 +241,8 @@ public class DriveSubsystem extends SubsystemBase {
   {  
     double xSpeedCommanded;
     double ySpeedCommanded;
+
+    this.fieldRelative = fieldRelative;
 
     // Have to invert for sim...not sure why.
     if (RobotBase.isSimulation()) rot *= -1;
@@ -426,4 +445,106 @@ public class DriveSubsystem extends SubsystemBase {
     field2d.getObject("Swerve Modules").setPoses(modulePoses);
   }
 
+  /**
+   * Toggle the drive mode between field or robot relative.
+   */
+  public void toggleFieldRelative()
+  {
+      Util.consoleLog();
+    
+      fieldRelative = !fieldRelative;
+
+      updateDS();
+  }
+
+  /**
+   * Return the drive mode status.
+   * @return True if field oriented, false if robot relative.
+   */
+  public boolean getFieldRelative()
+  {
+      return fieldRelative;
+  }
+
+  private void updateDS()
+  {
+      SmartDashboard.putBoolean("Field Relative", fieldRelative);
+      //SmartDashboard.putBoolean("Brakes", currentBrakeMode);
+  }
+
+  /**
+   * Gets the distance traveled by the robot drive wheels since the
+   * last call to resetDistanceTraveled. This simulates a regular
+   * encoder on the drive wheel. We can't use the actual wheel encoder
+   * because resetting that encoder would crash the swerve drive code.
+   * Note: This distance is only accurate for forward/backward and
+   * strafe moves. 
+   * @return
+   */
+  public double getDistanceTraveled()
+  {
+    return distanceTraveled; // * -1;
+  }
+
+  /**
+   * Reset the distance traveled by the robot.
+   */
+  public void resetDistanceTraveled()
+  {
+    distanceTraveled = 0;
+  }
+
+  /**
+   * Returns the current yaw angle of the robot measured from the last
+   * call to resetYaw(). Angle sign is WPILib convention, inverse of NavX.
+   * @return The yaw angle. - is right (cw) + is left (ccw).
+   */
+  public double getYaw()
+  {
+    return -yawAngle;
+  }
+
+  /**
+   * Returns the current yaw angle of the robot measured from the last
+   * call to resetYaw().
+   * @return The yaw angle in radians.
+   */
+  public double getYawR()
+  {
+    return Math.toRadians(-yawAngle);
+  }
+
+  /**
+   * Set yaw angle to zero.
+   */
+  public void resetYaw()
+  {
+    yawAngle = 0;
+  }
+
+  /**
+   * Set drive motor idle mode for each swerve module. Defaults to coast.
+   * @param on True to set idle mode to brake, false sets to coast.
+   */
+  public void setBrakeMode(boolean on) 
+  {
+      Util.consoleLog("%b", on);
+
+      currentBrakeMode = on;
+    
+      m_frontLeft.setBrakeMode(on); 
+      m_frontRight.setBrakeMode(on); 
+      m_rearLeft.setBrakeMode(on); 
+      m_rearRight.setBrakeMode(on); 
+
+      updateDS();
+  }
+
+  /**
+   * Toggles state of brake mode (brake/coast) for drive motors.
+   */
+  public void toggleBrakeMode()
+  {
+    setBrakeMode(!currentBrakeMode);
+  }
 }
