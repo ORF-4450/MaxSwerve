@@ -6,6 +6,8 @@ package frc.robot;
 
 import com.revrobotics.CANSparkBase.IdleMode;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -67,6 +69,9 @@ public final class Constants {
     public static final int kRearRightTurningCanId = 8;
 
     public static final boolean kGyroReversed = false;
+
+	  // Default starting field position in meters for pose tracking. 2024 field.
+	  public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(1.665, 2.541, Rotation2d.fromDegrees(0));
   }
 
   public static final class ModuleConstants {

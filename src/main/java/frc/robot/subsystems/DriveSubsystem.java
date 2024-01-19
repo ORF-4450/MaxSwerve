@@ -11,6 +11,7 @@ import com.revrobotics.REVPhysicsSim;
 import Team4450.Lib.Util;
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -57,7 +58,7 @@ public class DriveSubsystem extends SubsystemBase {
   // The gyro sensor
   //private final ADIS16470_IMU m_gyro = new ADIS16470_IMU();
 
-  private final AHRS m_navx = new AHRS();
+  private final AHRS    m_navx = new AHRS();
 
   private SimDouble     simAngle; // navx sim.
 
@@ -65,14 +66,19 @@ public class DriveSubsystem extends SubsystemBase {
 
   private Pose2d        lastPose;
   private double        distanceTraveled, yawAngle, lastYawAngle;
-  private boolean       fieldRelative, currentBrakeMode = false;
+  private boolean       fieldRelative = true, currentBrakeMode = false;
+  private boolean       alternateRotation = false, istracking = false;
 
   // Field2d object creates the field display on the simulation and gives us an API
   // to control what is displayed (the simulated robot).
 
   private final Field2d     field2d = new Field2d();
+  private Field2d           trackingField = new Field2d();  // Used by Advantage scope to show tracking target.
 
-  // Slew rate filter variables for controlling lateral acceleration
+  private PIDController     trackingPid = new PIDController(1, 0, 0);
+  private Pose2d            trackingPose = new Pose2d(1,5.6, new Rotation2d(0));
+
+// Slew rate filter variables for controlling lateral acceleration
   private double m_currentRotation = 0.0;
   private double m_currentTranslationDir = 0.0;
   private double m_currentTranslationMag = 0.0;
@@ -120,9 +126,15 @@ public class DriveSubsystem extends SubsystemBase {
       simAngle = new SimDouble((SimDeviceDataJNI.getSimValueHandle(dev, "Yaw")));
     }
 
+    trackingPid.setIZone(Math.PI); // reset if error accumulator is too high
+    trackingPid.enableContinuousInput(-Math.PI, Math.PI); // because roattion is periodic/continuous
+    SmartDashboard.putData("Tracking_field", trackingField); // to visualize position robot is tracking to
+    SmartDashboard.putData("tracking_pid", trackingPid); // for tuning in Shuffleboard
+    trackingField.setRobotPose(trackingPose); // add tracking pose to field
+    
     SmartDashboard.putData("Field2d", field2d);
 
-    resetOdometry(new Pose2d());
+    resetOdometry(DriveConstants.DEFAULT_STARTING_POSE);
   }
 
   @Override
@@ -233,16 +245,12 @@ public class DriveSubsystem extends SubsystemBase {
    * @param xSpeed        Speed of the robot in the x direction (forward).
    * @param ySpeed        Speed of the robot in the y direction (sideways).
    * @param rot           Angular rate of the robot.
-   * @param fieldRelative Whether the provided x and y speeds are relative to the
-   *                      field.
    * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void drive(double xSpeed, double ySpeed, double rot, boolean fieldRelative, boolean rateLimit) 
+  public void drive(double xSpeed, double ySpeed, double rot, boolean rateLimit) 
   {  
     double xSpeedCommanded;
     double ySpeedCommanded;
-
-    this.fieldRelative = fieldRelative;
 
     // Have to invert for sim...not sure why.
     if (RobotBase.isSimulation()) rot *= -1;
@@ -325,6 +333,74 @@ public class DriveSubsystem extends SubsystemBase {
     m_frontRight.setDesiredState(swerveModuleStates[1]);
     m_rearLeft.setDesiredState(swerveModuleStates[2]);
     m_rearRight.setDesiredState(swerveModuleStates[3]);
+  }
+/**
+   * Method to drive the robot using joystick info.
+   * An overload of the drive method that adds a parameter for the Y component of the rotation joystick
+   * and chooses what drive behavior to use (added by cole)
+   *
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param rotX          X component of rotation joystick
+   * @param rotY          Y component of rotation joystick
+   * @param rateLimit     Whether to enable rate limiting for smoother control.
+   */
+  public void drive(double xSpeed, double ySpeed, double rotX, double rotY, boolean rateLimit) 
+  {
+    // for pointing rot joystick at angle to match robot to 
+    if (alternateRotation && fieldRelative) 
+    {
+      // rotX and rotY are backwards because from the drivers perspective they are at 90deg to the field.
+      double theta = Math.atan2(rotX, rotY);
+      double theta_magnitude = Math.sqrt(Math.pow(rotX, 2) + Math.pow(rotY, 2));
+      
+      if (theta_magnitude > 0.2) // don't do anything if the joystick hasn't moved enough
+        driveTracking(xSpeed, ySpeed, theta, rateLimit);
+      else 
+        drive(xSpeed, ySpeed, 0, rateLimit);
+            
+      // if the robot has enabled tracking to a specific pose 
+      // driver has no control over heading of robot in this "mode"
+    } else if (istracking) {
+      Pose2d robotPose = getPose();
+      
+      double theta = Math.atan2(
+          robotPose.getY() - trackingPose.getY(),
+          robotPose.getX() - trackingPose.getX()
+        ) + Math.PI;
+      
+      Util.consoleLog("Robot: (%f, %f)\nTrack To: (%f, %f)\nTheta: %f\n\n\n",
+                      robotPose.getX(), robotPose.getY(),
+                      trackingPose.getX(), trackingPose.getY(),
+                      theta);
+
+      driveTracking(xSpeed, ySpeed, theta, rateLimit);
+
+      // just drive like normal, ignoring the rotY component 
+    } else 
+      drive(xSpeed, ySpeed, rotX, rateLimit);
+  }
+
+  /**
+   * A custom method to drive the robot while tracking (facing) a specific heading.
+   *
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param theta         Desired heading of the robot (IN RADIANS!)
+   * @param rateLimit     Whether to enable rate limiting for smoother control.
+   */
+  public void driveTracking(double xSpeed, double ySpeed, double theta, boolean rateLimit) 
+  {
+    double currentHeading = Math.toRadians(getHeading()) % (Math.PI * 2.0); // ignore multiples of 2pi
+    double rotSpeed = trackingPid.calculate(currentHeading, theta);
+
+    // for tuning purposes:
+    SmartDashboard.putNumber("tracking setpoint", theta);
+    SmartDashboard.putNumber("tracking value", currentHeading);
+    SmartDashboard.putNumber("applied rot speed", rotSpeed);
+
+    // drive using the calculated rot_speed like normal
+    drive(xSpeed, ySpeed, rotSpeed, rateLimit);
   }
 
   /**
@@ -469,7 +545,9 @@ public class DriveSubsystem extends SubsystemBase {
   private void updateDS()
   {
       SmartDashboard.putBoolean("Field Relative", fieldRelative);
-      //SmartDashboard.putBoolean("Brakes", currentBrakeMode);
+      SmartDashboard.putBoolean("Brakes on", currentBrakeMode);
+      SmartDashboard.putBoolean("Alternate Drive", alternateRotation);
+      SmartDashboard.putBoolean("Tracking", istracking);
   }
 
   /**
@@ -491,6 +569,8 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetDistanceTraveled()
   {
+    Util.consoleLog();
+    
     distanceTraveled = 0;
   }
 
@@ -519,6 +599,8 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetYaw()
   {
+    Util.consoleLog();
+
     yawAngle = 0;
   }
 
@@ -546,5 +628,68 @@ public class DriveSubsystem extends SubsystemBase {
   public void toggleBrakeMode()
   {
     setBrakeMode(!currentBrakeMode);
+  }
+
+  /**
+   * Enables the alternate field-centric rotation method
+   */
+  public void enableAlternateRotation() {
+    Util.consoleLog();
+
+    this.alternateRotation = true;
+    this.trackingPid.reset();
+    this.trackingPid.setTolerance(1);
+
+    updateDS();
+  }
+
+  /**
+   * Disables the alternate field-centric rotation method
+   */
+  public void disableAlternateRotation() {
+    Util.consoleLog();
+
+    alternateRotation = false;
+
+    updateDS();
+  }
+
+  /**
+   * Set a pose to track rotation to
+   */
+  public void setTrackingPose(double x, double y) {
+    Util.consoleLog("x=%.2f y=%.2f", x, y);
+
+    trackingPose = new Pose2d(x, y, new Rotation2d(0));
+    trackingField.setRobotPose(trackingPose);
+  }
+
+  /**
+   * Set pose to track to as current robot pose
+   */
+  public void setTrackingPose() {
+    setTrackingPose(getPose().getX(), getPose().getY());
+  }
+
+  /**
+   * Enables tracking of a pre-specified Pose2d
+   */
+  public void enableTracking() {
+    Util.consoleLog();
+
+    istracking = true;
+
+    updateDS();
+  }
+
+  /**
+   * Disables tracking of a pre-specified Pose2d
+   */
+  public void disableTracking() {
+    Util.consoleLog();
+
+    istracking = false;
+
+    updateDS();
   }
 }

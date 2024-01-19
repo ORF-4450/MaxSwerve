@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import Team4450.Lib.XboxController;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -13,7 +15,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-import edu.wpi.first.wpilibj.XboxController;
+//import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
@@ -21,8 +23,11 @@ import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+
 import java.util.List;
 
 /*
@@ -54,7 +59,8 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(m_driverController.getLeftY(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(m_driverController.getLeftX(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(m_driverController.getRightX(), OIConstants.kDriveDeadband),
-                true, false),
+                -MathUtil.applyDeadband(m_driverController.getRightY(), OIConstants.kDriveDeadband),
+                false),
             m_robotDrive));
   }
 
@@ -68,10 +74,30 @@ public class RobotContainer {
    * {@link JoystickButton}.
    */
   private void configureButtonBindings() {
-    new JoystickButton(m_driverController, Button.kR1.value)
+    // Holding Left bumper brakes and sets X pattern to stop movement.
+    new Trigger(() -> m_driverController.getLeftBumper())
+        .whileTrue(new RunCommand(() -> m_robotDrive.setX(), m_robotDrive));
+
+    // holding top right bumper enables the alternate rotation mode in
+    // which the driver points stick to desired heading.
+    new Trigger(() -> m_driverController.getRightBumper())
+        .whileTrue(new StartEndCommand(m_robotDrive::enableAlternateRotation,
+                                       m_robotDrive::disableAlternateRotation));
+
+    // the "A" button (or cross on PS4 controller) toggles tracking mode.
+    new Trigger(() -> m_driverController.getAButton())
+        .toggleOnTrue(new StartEndCommand(m_robotDrive::enableTracking,
+                                          m_robotDrive::disableTracking));
+
+    // POV buttons do same as alternate driving mode but without any lateral
+    // movement and increments of 45deg.
+    new Trigger(()-> m_driverController.getPOV() != -1)
         .whileTrue(new RunCommand(
-            () -> m_robotDrive.setX(),
-            m_robotDrive));
+            () -> m_robotDrive.driveTracking(
+                0,0,
+                povToHeading(m_driverController.getPOV()),
+                true
+            ), m_robotDrive));
   }
 
   /**
@@ -117,6 +143,25 @@ public class RobotContainer {
     m_robotDrive.resetOdometry(exampleTrajectory.getInitialPose());
 
     // Run path following command, then stop at the end.
-    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false, false));
+    return swerveControllerCommand.andThen(() -> m_robotDrive.drive(0, 0, 0, false));
+  }
+  
+  /**
+  * Convert a POV reading (in degrees) to heading (-pi/2 to 0 to pi/2)
+  *
+  * @param pov The POV value
+  * @return The heading in radians
+  */
+  private double povToHeading(double pov) {
+    double radians = Math.toRadians(pov);
+
+    if (radians < -Math.PI) {
+        double overshoot = radians + Math.PI;
+        radians = -overshoot;
+    }
+
+    radians *= -1;
+    
+    return radians;
   }
 }
