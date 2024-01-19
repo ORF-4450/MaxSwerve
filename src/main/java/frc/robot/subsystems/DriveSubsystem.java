@@ -75,13 +75,15 @@ public class DriveSubsystem extends SubsystemBase {
   private final Field2d     field2d = new Field2d();
   private Field2d           trackingField = new Field2d();  // Used by Advantage scope to show tracking target.
 
-  private PIDController     trackingPid = new PIDController(1, 0, 0);
+  private PIDController     trackingPid = new PIDController(0.8, 0.1, 0);
   private Pose2d            trackingPose = new Pose2d(1,5.6, new Rotation2d(0));
 
 // Slew rate filter variables for controlling lateral acceleration
   private double m_currentRotation = 0.0;
   private double m_currentTranslationDir = 0.0;
   private double m_currentTranslationMag = 0.0;
+
+  private double speedLimiter = 1;
 
   private SlewRateLimiter m_magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
   private SlewRateLimiter m_rotLimiter = new SlewRateLimiter(DriveConstants.kRotationalSlewRate);
@@ -306,9 +308,9 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     // Convert the commanded speeds into the correct units for the drivetrain
-    double xSpeedDelivered = xSpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond;
-    double ySpeedDelivered = ySpeedCommanded * DriveConstants.kMaxSpeedMetersPerSecond;
-    double rotDelivered = m_currentRotation * DriveConstants.kMaxAngularSpeed;
+    double xSpeedDelivered = xSpeedCommanded * speedLimiter * DriveConstants.kMaxSpeedMetersPerSecond;
+    double ySpeedDelivered = ySpeedCommanded * speedLimiter * DriveConstants.kMaxSpeedMetersPerSecond;
+    double rotDelivered = m_currentRotation * speedLimiter * DriveConstants.kMaxAngularSpeed;
 
     // SmartDashboard.putNumber("0 xspeed", xSpeedDelivered);
     // SmartDashboard.putNumber("0 yspeed", ySpeedDelivered);
@@ -629,6 +631,25 @@ public class DriveSubsystem extends SubsystemBase {
   {
     setBrakeMode(!currentBrakeMode);
   }
+
+  public void toggleFieldOriented()
+  {
+    this.fieldRelative = !this.fieldRelative;
+    Util.consoleLog("field relative: %b", fieldRelative);
+  }
+
+  public void enableSlowMode()
+  {
+    speedLimiter = 1;
+    Util.consoleLog("speed limiter: %f", speedLimiter);
+  }
+
+  public void disableSlowMode()
+  {
+    speedLimiter = 0.3;
+    Util.consoleLog("speed limiter: %f", speedLimiter);
+  }
+
 
   /**
    * Enables the alternate field-centric rotation method

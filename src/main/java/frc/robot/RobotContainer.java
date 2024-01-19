@@ -15,13 +15,15 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
-//import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
+// import edu.wpi.first.wpilibj.XboxController;
+// import edu.wpi.first.wpilibj.PS4Controller.Button;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -39,9 +41,12 @@ import java.util.List;
 public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
+  private final Shooter m_robotShooter = new Shooter();
+  
 
   // The driver's controller
   XboxController m_driverController = new XboxController(OIConstants.kDriverControllerPort);
+  XboxController m_manipulatorController = new XboxController(OIConstants.kManipulatorControllerPort);
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -88,6 +93,25 @@ public class RobotContainer {
     new Trigger(() -> m_driverController.getAButton())
         .toggleOnTrue(new StartEndCommand(m_robotDrive::enableTracking,
                                           m_robotDrive::disableTracking));
+    
+    // run shooter (manupulator controller)
+    new Trigger(() -> m_manipulatorController.getAButton())
+        .whileTrue(new StartEndCommand(m_robotShooter::start, m_robotShooter::stop, m_robotShooter));
+    
+    // reset field orientation
+    new Trigger(() -> m_driverController.getStartButton())
+        .onTrue(new InstantCommand(m_robotDrive::resetYaw));
+    
+    // toggle field-oriented
+    new Trigger(() -> m_driverController.getBackButton())
+        .onTrue(new InstantCommand(m_robotDrive::toggleFieldOriented));
+    
+    // toggle slow-mode
+    new Trigger(() -> m_driverController.getLeftTrigger())
+        .whileTrue(new StartEndCommand(m_robotDrive::enableSlowMode, m_robotDrive::disableSlowMode));
+    
+    
+
 
     // POV buttons do same as alternate driving mode but without any lateral
     // movement and increments of 45deg.
