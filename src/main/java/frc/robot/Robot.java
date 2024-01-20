@@ -8,6 +8,7 @@ import Team4450.Lib.LibraryVersion;
 import Team4450.Lib.Util;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.WPILibVersion;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -121,12 +122,28 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {}
 
+  /**
+   * This function is called once at the start of test mode.
+   */
   @Override
-  public void testInit() {
-    Util.consoleLog("------------------------------------"); 
+  public void testInit() 
+  {
+    Util.consoleLog();
 
     // Cancels all running commands at the start of test mode.
+
     CommandScheduler.getInstance().cancelAll();
+
+    // Next two lines launch teleop mode, but since we are in test
+    // mode, LiveWindow will be enabled to display test data to the
+    // outlineviewer to shuffleboard. Our "test" mode is the regular
+    // telop with LW enabled.
+
+    LiveWindow.enableAllTelemetry();
+    
+    teleopInit();
+
+    CommandScheduler.getInstance().enable();
   }
 
   /** This function is called periodically during test mode. */
