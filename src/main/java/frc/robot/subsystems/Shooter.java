@@ -24,7 +24,7 @@ public class Shooter extends SubsystemBase {
 
     @Override
     public void periodic() {
-        motorSpeed = SmartDashboard.getNumber("shooter_speed", motorSpeed);
+        motorSpeed = SmartDashboard.getNumber("Shooter speed", motorSpeed);
 
         if (isrunning) motor1.set(motorSpeed);
     }
