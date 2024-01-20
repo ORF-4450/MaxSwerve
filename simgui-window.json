@@ -17,7 +17,7 @@
   "Table": {
     "0x542B5671,2": {
       "Column 0  Width": "396",
-      "Column 1  Width": "713",
+      "Column 1  Width": "822",
       "RefScale": "19"
     }
   },
@@ -40,7 +40,7 @@
     "###NetworkTables": {
       "Collapsed": "0",
       "Pos": "463,46",
-      "Size": "1133,821"
+      "Size": "1268,821"
     },
     "###NetworkTables Info": {
       "Collapsed": "0",
@@ -60,7 +60,7 @@
     "###Timing": {
       "Collapsed": "0",
       "Pos": "7,225",
-      "Size": "188,186"
+      "Size": "188,215"
     },
     "Debug##Default": {
       "Collapsed": "0",

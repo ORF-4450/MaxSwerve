@@ -76,7 +76,7 @@ public class DriveSubsystem extends SubsystemBase {
   private Field2d           trackingField = new Field2d();  // Used by Advantage scope to show tracking target.
 
   private PIDController     trackingPid = new PIDController(0.8, 0.1, 0);
-  private Pose2d            trackingPose = new Pose2d(1,5.6, new Rotation2d(0));
+  private Pose2d            trackingPose = new Pose2d(1.360,5.655, new Rotation2d(0));
 
 // Slew rate filter variables for controlling lateral acceleration
   private double currentRotation = 0.0;
@@ -92,7 +92,7 @@ public class DriveSubsystem extends SubsystemBase {
   // Odometry class for tracking robot pose
   SwerveDriveOdometry odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      Rotation2d.fromDegrees(getGyroAngleDegrees()), //gyro.getAngle()),
+      Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
       new SwerveModulePosition[] {
           frontLeft.getPosition(),
           frontRight.getPosition(),
@@ -143,7 +143,7 @@ public class DriveSubsystem extends SubsystemBase {
   public void periodic() {
     // Update the odometry
     Pose2d currentPose = odometry.update(
-        Rotation2d.fromDegrees(getGyroAngleDegrees()),   //gyro.getAngle()),
+        Rotation2d.fromDegrees(getGyroYaw()),   //gyro.getAngle()),
         new SwerveModulePosition[] {
             frontLeft.getPosition(),
             frontRight.getPosition(),
@@ -151,7 +151,8 @@ public class DriveSubsystem extends SubsystemBase {
             rearRight.getPosition()
         });
 
-    SmartDashboard.putNumber("Gyro angle", getGyroAngleDegrees());
+    SmartDashboard.putNumber("Gyro angle", getGyroYaw());
+    //SmartDashboard.putNumber("Gyro turn rate", getTurnRate());
 
     SmartDashboard.putString("Robot pose", currentPose.toString());
 
@@ -170,7 +171,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     lastYawAngle = navx.getAngle();
 
-    SmartDashboard.putNumber("Sim Yaw Angle", getYaw());
+    SmartDashboard.putNumber("Yaw Angle", getYaw());
 
     lastPose = currentPose;
 
@@ -195,10 +196,10 @@ public class DriveSubsystem extends SubsystemBase {
     // correctly. Will leave the code in place in case this issue gets fixed.
     //if (robot.isEnabled()) REVPhysicsSim.getInstance().run();
 
-     // want to simulate navX gyro changing as robot turns
+    // want to simulate navX gyro changing as robot turns
     // information available is radians per second and this happens every 20ms
     // radians/2pi = 360 degrees so 1 degree per second is radians / 2pi
-    // increment is made every 20 ms so radian adder would be (rads/sec) *(20/1000)
+    // increment is made every 20 ms so radian adder would be (rads/sec) * (20/1000)
     // degree adder would be radian adder * 360/2pi
     // so degree increment multiplier is 360/100pi = 1.1459
 
@@ -227,7 +228,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void resetOdometry(Pose2d pose) {
     odometry.resetPosition(
-        Rotation2d.fromDegrees(getGyroAngleDegrees()), //gyro.getAngle()),
+        Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
         new SwerveModulePosition[] {
             frontLeft.getPosition(),
             frontRight.getPosition(),
@@ -312,24 +313,14 @@ public class DriveSubsystem extends SubsystemBase {
     double ySpeedDelivered = ySpeedCommanded * speedLimiter * DriveConstants.kMaxSpeedMetersPerSecond;
     double rotDelivered = currentRotation * speedLimiter * DriveConstants.kMaxAngularSpeed;
 
-    // SmartDashboard.putNumber("0 xspeed", xSpeedDelivered);
-    // SmartDashboard.putNumber("0 yspeed", ySpeedDelivered);
-    // SmartDashboard.putNumber("0 rot", rotDelivered);
-
     chassisSpeeds =
         fieldRelative
-//           ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(gyro.getAngle()))
-            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(getGyroAngleDegrees()))
+            ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(getGyroYaw()))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered);
-
-    // SmartDashboard.putNumber("0 vxspeed", chassisSpeeds.vxMetersPerSecond);
-    // SmartDashboard.putNumber("0 vyspeed", chassisSpeeds.vyMetersPerSecond);
 
     SwerveModuleState swerveModuleStates[] = DriveConstants.kDriveKinematics.toSwerveModuleStates(chassisSpeeds);
 
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
-
-    //SmartDashboard.putNumber("0 fl spd", swerveModuleStates[0].speedMetersPerSecond);
     
     frontLeft.setDesiredState(swerveModuleStates[0]);
     frontRight.setDesiredState(swerveModuleStates[1]);
@@ -393,7 +384,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void driveTracking(double xSpeed, double ySpeed, double theta, boolean rateLimit) 
   {
-    double currentHeading = Math.toRadians(getHeading()) % (Math.PI * 2.0); // ignore multiples of 2pi
+    double currentHeading = Math.toRadians(getGyroYaw()) % (Math.PI * 2.0); // ignore multiples of 2pi (360).
     double rotSpeed = trackingPid.calculate(currentHeading, theta);
 
     // for tuning purposes:
@@ -440,10 +431,10 @@ public class DriveSubsystem extends SubsystemBase {
   /**
    * Returns the heading of the robot.
    *
-   * @return the robot's heading in degrees, from -180 to 180
+   * @return the robot's heading in degrees, from 0 to 359.
    */
   public double getHeading() {
-    return Rotation2d.fromDegrees(-navx.getAngle()).getDegrees();  //gyro.getAngle()).getDegrees();
+    return RobotContainer.navx.getHeadingInt();
   }
 
   /**
@@ -460,7 +451,7 @@ public class DriveSubsystem extends SubsystemBase {
    * Get Gyro angle in degrees.
    * @return Angle in degrees. 0 to +- 180.
    */
-  public double getGyroAngleDegrees() 
+  public double getGyroYaw() 
   {
     double angle = Math.IEEEremainder((-navx.getAngle()), 360);
 
@@ -471,7 +462,7 @@ public class DriveSubsystem extends SubsystemBase {
    * Get gyro yaw from the angle of the robot at last gyro reset.
    * @return Rotation2D containing Gyro yaw in radians. + is left of zero (ccw) - is right (cw).
    */
-  public Rotation2d getGyroRotation2d() 
+  public Rotation2d getGyroYaw2dx() 
   {
     if (navx.isMagnetometerCalibrated()) 
     {
@@ -498,7 +489,7 @@ public class DriveSubsystem extends SubsystemBase {
         .plus(getPose().getTranslation());
     
     module.setModulePose(
-        new Pose2d(modulePosition, module.getAngle2d().plus(Rotation2d.fromDegrees(getGyroAngleDegrees()))));
+        new Pose2d(modulePosition, module.getAngle2d().plus(Rotation2d.fromDegrees(getGyroYaw()))));
   }
 
   /**
@@ -609,8 +600,7 @@ public class DriveSubsystem extends SubsystemBase {
   {
     Util.consoleLog();
 
-    //navx.reset();
-    navx.zeroYaw();
+    navx.reset();
   }
 
   /**

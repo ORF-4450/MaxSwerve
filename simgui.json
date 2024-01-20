@@ -2,7 +2,10 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
-      "/SmartDashboard/Field2d": "Field2d"
+      "/SmartDashboard/Field2d": "Field2d",
+      "/SmartDashboard/Gyro2": "Gyro",
+      "/SmartDashboard/TrackingField": "Field2d",
+      "/SmartDashboard/TrackingPid": "PIDController"
     },
     "windows": {
       "/SmartDashboard/Field2d": {
@@ -37,6 +40,9 @@
         "open": true
       },
       "SmartDashboard": {
+        "Gyro2": {
+          "open": true
+        },
         "open": true
       }
     }
