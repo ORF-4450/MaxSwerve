@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import Team4450.Lib.NavX;
 import Team4450.Lib.Util;
 import Team4450.Lib.XboxController;
 
@@ -18,6 +19,7 @@ import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 //import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.PS4Controller.Button;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
@@ -42,12 +44,15 @@ import java.util.List;
 public class RobotContainer {
 
   // The robot's subsystems
-  private final DriveSubsystem  robotDrive = new DriveSubsystem();
-  private final Shooter         shooter = new Shooter();
+  private final DriveSubsystem  robotDrive;
+  private final Shooter         shooter;
 
   // The driver's controller
   XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
   XboxController manipulatorController = new XboxController(OIConstants.kManipulatorControllerPort);
+
+  // Navigation board, RoboLib wrapper.
+  public static NavX			navx;
 
   /**
    * The container for the robot. Contains subsystems, OI devices, and commands.
@@ -55,10 +60,29 @@ public class RobotContainer {
   public RobotContainer() {
     Util.consoleLog();
 
+    // Create NavX object here since must done before CameraFeed is created (don't remember why).
+    // Navx calibrates at power on and must complete before robot moves. Takes ~1 second for 2nd
+    // generation Navx ~15 seconds for classic Navx. We assume there will be enough time between
+    // power on and our first movement because normally things don't happen that fast
+
+    // Warning: The navx instance is shared with the swerve drive code. Resetting or otherwise
+    // manipulating the navx (as opposed to just reading data) may crash the swerve drive code.
+
+    navx = NavX.getInstance(NavX.PortType.SPI);
+
+    // Add navx as a Sendable. Updates the dashboard heading indicator automatically.
+    
+    SmartDashboard.putData("Gyro2", navx);
+
+    robotDrive = new DriveSubsystem();
+    shooter = new Shooter();
+
     // Configure the button bindings
+
     configureButtonBindings();
 
     // Configure default commands
+
     robotDrive.setDefaultCommand(
         // The left stick controls translation of the robot.
         // Turning is controlled by the X axis of the right stick.

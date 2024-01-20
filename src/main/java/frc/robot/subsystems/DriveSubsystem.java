@@ -58,7 +58,7 @@ public class DriveSubsystem extends SubsystemBase {
   // The gyro sensor
   //private final ADIS16470_IMU gyro = new ADIS16470_IMU();
 
-  private final AHRS    navx = new AHRS();
+  private final AHRS    navx = RobotContainer.navx.getAHRS();
 
   private SimDouble     simAngle; // navx sim.
 
@@ -111,7 +111,7 @@ public class DriveSubsystem extends SubsystemBase {
     new Thread(() -> {
       try {
         Thread.sleep(2000);
-        zeroHeading();
+        zeroGyro();
       } catch (Exception e) { }
     }).start();
 
@@ -130,8 +130,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     trackingPid.setIZone(Math.PI); // reset if error accumulator is too high
     trackingPid.enableContinuousInput(-Math.PI, Math.PI); // because roattion is periodic/continuous
-    SmartDashboard.putData("Tracking_field", trackingField); // to visualize position robot is tracking to
-    SmartDashboard.putData("tracking_pid", trackingPid); // for tuning in Shuffleboard
+    SmartDashboard.putData("TrackingField", trackingField); // to visualize position robot is tracking to
+    SmartDashboard.putData("TrackingPid", trackingPid); // for tuning in Shuffleboard
     trackingField.setRobotPose(trackingPose); // add tracking pose to field
     
     SmartDashboard.putData("Field2d", field2d);
@@ -151,9 +151,9 @@ public class DriveSubsystem extends SubsystemBase {
             rearRight.getPosition()
         });
 
-    SmartDashboard.putNumber("angle", getGyroAngleDegrees());
+    SmartDashboard.putNumber("Gyro angle", getGyroAngleDegrees());
 
-    SmartDashboard.putString("robot pose", currentPose.toString());
+    SmartDashboard.putString("Robot pose", currentPose.toString());
 
     Transform2d poseOffset = currentPose.minus(lastPose);
     
@@ -170,7 +170,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     lastYawAngle = navx.getAngle();
 
-    SmartDashboard.putNumber("Yaw Angle", getYaw());
+    SmartDashboard.putNumber("Sim Yaw Angle", getYaw());
 
     lastPose = currentPose;
 
@@ -437,12 +437,6 @@ public class DriveSubsystem extends SubsystemBase {
     rearRight.resetEncoders();
   }
 
-  /** Zeroes the heading of the robot. */
-  public void zeroHeading() {
-    //gyro.reset();
-    navx.reset();
-  }
-
   /**
    * Returns the heading of the robot.
    *
@@ -469,7 +463,7 @@ public class DriveSubsystem extends SubsystemBase {
   public double getGyroAngleDegrees() 
   {
     double angle = Math.IEEEremainder((-navx.getAngle()), 360);
-    SmartDashboard.putNumber("0 gyroangle", angle);
+
     return angle;
   }
   
@@ -615,7 +609,8 @@ public class DriveSubsystem extends SubsystemBase {
   {
     Util.consoleLog();
 
-    navx.reset();
+    //navx.reset();
+    navx.zeroYaw();
   }
 
   /**
