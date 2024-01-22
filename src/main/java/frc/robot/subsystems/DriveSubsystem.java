@@ -6,12 +6,14 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.unmanaged.Unmanaged;
 import com.kauailabs.navx.frc.AHRS;
-import com.revrobotics.REVPhysicsSim;
+//import com.revrobotics.REVPhysicsSim;
 
 import Team4450.Lib.Util;
+
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,15 +21,13 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.WPIUtilJNI;
-import edu.wpi.first.wpilibj.ADIS16470_IMU;
+//import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.RobotContainer;
 import frc.utils.SwerveUtils;
@@ -90,15 +90,31 @@ public class DriveSubsystem extends SubsystemBase {
   private double prevTime = WPIUtilJNI.now() * 1e-6;
 
   // Odometry class for tracking robot pose
-  SwerveDriveOdometry odometry = new SwerveDriveOdometry(
+  // SwerveDriveOdometry odometry = new SwerveDriveOdometry(
+  //     DriveConstants.kDriveKinematics,
+  //     Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
+  //     new SwerveModulePosition[] {
+  //         frontLeft.getPosition(),
+  //         frontRight.getPosition(),
+  //         rearLeft.getPosition(),
+  //         rearRight.getPosition()
+  //     });
+
+  // TODO: Fix the vectors used to set std deviations for measurements. Using default
+  // for now. Not sure how to determine the values.
+  private final SwerveDrivePoseEstimator odometry = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
       Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
-      new SwerveModulePosition[] {
+       new SwerveModulePosition[] {
           frontLeft.getPosition(),
           frontRight.getPosition(),
           rearLeft.getPosition(),
           rearRight.getPosition()
-      });
+        },
+      new Pose2d());
+      // VecBuilder.fill(0.1, 0.1, 0.1),
+      // VecBuilder.fill(0.05),
+      // VecBuilder.fill(0.1, 0.1, 0.1));
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
@@ -218,7 +234,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @return The pose.
    */
   public Pose2d getPose() {
-    return odometry.getPoseMeters();
+    return odometry.getEstimatedPosition();
   }
 
   /**
