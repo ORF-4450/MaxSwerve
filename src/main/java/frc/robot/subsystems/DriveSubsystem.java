@@ -4,6 +4,10 @@
 
 package frc.robot.subsystems;
 
+import org.photonvision.PhotonCamera;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import com.ctre.phoenix.unmanaged.Unmanaged;
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.REVPhysicsSim;
@@ -22,6 +26,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.util.WPIUtilJNI;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.RobotBase;
@@ -34,6 +39,8 @@ import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DriveSubsystem extends SubsystemBase {
+
+  PhotonCamera camera = new PhotonCamera("4450-LL");
   // Create MAXSwerveModules
   private final MAXSwerveModule frontLeft = new MAXSwerveModule(
       DriveConstants.kFrontLeftDrivingCanId,
@@ -75,7 +82,7 @@ public class DriveSubsystem extends SubsystemBase {
   private final Field2d     field2d = new Field2d();
   private Field2d           trackingField = new Field2d();  // Used by Advantage scope to show tracking target.
 
-  private PIDController     trackingPid = new PIDController(0.8, 0.1, 0);
+  private PIDController     trackingPid = new PIDController(0.8, 0, 0);
   private Pose2d            trackingPose = new Pose2d(1.360,5.655, new Rotation2d(0));
 
 // Slew rate filter variables for controlling lateral acceleration
@@ -355,23 +362,29 @@ public class DriveSubsystem extends SubsystemBase {
       // if the robot has enabled tracking to a specific pose 
       // driver has no control over heading of robot in this "mode"
     } else if (istracking) {
-      Pose2d robotPose = getPose();
-      
-      double theta = Math.atan2(
-          robotPose.getY() - trackingPose.getY(),
-          robotPose.getX() - trackingPose.getX()
-        ) + Math.PI;
-      
-      Util.consoleLog("Robot: (%f, %f)\nTrack To: (%f, %f)\nTheta: %f\n\n\n",
-                      robotPose.getX(), robotPose.getY(),
-                      trackingPose.getX(), trackingPose.getY(),
-                      theta);
-
-      driveTracking(xSpeed, ySpeed, theta, rateLimit);
-
+      PhotonPipelineResult result = camera.getLatestResult();
+      double theta = 0;
+      if (result.hasTargets()) {
+        SmartDashboard.putBoolean("target",   true);
+        PhotonTrackedTarget tracked = result.getBestTarget();
+        Util.consoleLog("tracking ID: %d", tracked.getFiducialId());
+        double aprilTagYaw = tracked.getYaw();
+        // theta = getYawR() + Math.PI - Math.toRadians(aprilTagYaw);
+        driveTracking(xSpeed, ySpeed, aprilTagYaw, rateLimit);
+      }
+      else {
+        SmartDashboard.putBoolean("target",   false);
+        drive(xSpeed, ySpeed, rotX, rateLimit);
+      }
       // just drive like normal, ignoring the rotY component 
     } else 
       drive(xSpeed, ySpeed, rotX, rateLimit);
+  }
+
+  public void driveTrackingCamera(double xSpeed, double ySpeed, double theta, boolean rateLimit) {
+      trackingPid.setTolerance(2);
+      double rotSpeed = trackingPid.calculate(-theta, 0);
+      drive(xSpeed, ySpeed, rotSpeed, rateLimit);
   }
 
   /**
