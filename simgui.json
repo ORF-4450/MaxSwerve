@@ -2,6 +2,7 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Auto Chooser": "String Chooser",
       "/SmartDashboard/Field2d": "Field2d",
       "/SmartDashboard/Gyro2": "Gyro",
       "/SmartDashboard/TrackingField": "Field2d",
@@ -46,5 +47,8 @@
         "open": true
       }
     }
+  },
+  "NetworkTables Info": {
+    "visible": true
   }
 }

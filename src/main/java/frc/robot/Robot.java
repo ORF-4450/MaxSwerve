@@ -6,6 +6,10 @@ package frc.robot;
 
 import Team4450.Lib.LibraryVersion;
 import Team4450.Lib.Util;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
@@ -25,12 +29,18 @@ public class Robot extends TimedRobot {
 
   private RobotContainer m_robotContainer;
 
+  private StringLogEntry myStringLog = new StringLogEntry(DataLogManager.getLog(), "CustomLogOutput");
+  private void logLog(String x) {
+    myStringLog.append(x);
+  }
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
    */
   @Override
   public void robotInit() {
+    DataLogManager.start();
+    DriverStation.startDataLog(DataLogManager.getLog());
     
     // Set up our custom logger.
 
@@ -39,6 +49,7 @@ public class Robot extends TimedRobot {
     } catch  (Exception e) { endCompetition(); }
 
     Util.consoleLog("%s", Constants.kProgramName);
+    logLog("askjhdfgskdf");
 
     if (RobotBase.isSimulation()) 
       Util.consoleLog("Simulated Robot");
