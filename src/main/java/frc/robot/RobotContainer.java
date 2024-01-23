@@ -88,7 +88,6 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(driverController.getLeftY(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(driverController.getLeftX(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(driverController.getRightX(), OIConstants.kDriveDeadband),
-                0,
                 false),
             robotDrive));
     autoChooser = AutoBuilder.buildAutoChooser();

@@ -81,12 +81,8 @@ public class DriveSubsystem extends SubsystemBase {
   // to control what is displayed (the simulated robot).
 
   private final Field2d     field2d = new Field2d();
-  private Field2d           trackingField = new Field2d();  // Used by Advantage scope to show tracking target.
 
-  private PIDController     trackingPid = new PIDController(0.8, 0, 0);
-  private Pose2d            trackingPose = new Pose2d(1.360,5.655, new Rotation2d(0));
-
-// Slew rate filter variables for controlling lateral acceleration
+  // Slew rate filter variables for controlling lateral acceleration
   private double currentRotation = 0.0;
   private double currentTranslationDir = 0.0;
   private double currentTranslationMag = 0.0;
@@ -177,12 +173,6 @@ public class DriveSubsystem extends SubsystemBase {
 
       simAngle = new SimDouble((SimDeviceDataJNI.getSimValueHandle(dev, "Yaw")));
     }
-
-    trackingPid.setIZone(Math.PI); // reset if error accumulator is too high
-    trackingPid.enableContinuousInput(-Math.PI, Math.PI); // because roattion is periodic/continuous
-    SmartDashboard.putData("TrackingField", trackingField); // to visualize position robot is tracking to
-    SmartDashboard.putData("TrackingPid", trackingPid); // for tuning in Shuffleboard
-    trackingField.setRobotPose(trackingPose); // add tracking pose to field
 
     SmartDashboard.putData("Field2d", field2d);
 
@@ -305,6 +295,8 @@ public class DriveSubsystem extends SubsystemBase {
     double xSpeedCommanded;
     double ySpeedCommanded;
 
+    if (istracking) rot = trackingRotation; // override joystick value
+
     // Have to invert for sim...not sure why.
     if (RobotBase.isSimulation()) rot *= -1;
 
@@ -385,47 +377,6 @@ public class DriveSubsystem extends SubsystemBase {
     rearRight.setDesiredState(swerveModuleStates[3]);
   }
 
-/**
-   * Method to drive the robot using joystick info.
-   * An overload of the drive method that adds a parameter for the Y component of the rotation joystick
-   * and chooses what drive behavior to use (added by cole)
-   *
-   * @param xSpeed        Speed of the robot in the x direction (forward).
-   * @param ySpeed        Speed of the robot in the y direction (sideways).
-   * @param rotX          X component of rotation joystick
-   * @param rotY          Y component of rotation joystick
-   * @param rateLimit     Whether to enable rate limiting for smoother control.
-   */
-  public void drive(double xSpeed, double ySpeed, double rotX, double rotY, boolean rateLimit)
-  {
-    if (istracking) {
-      drive(xSpeed, ySpeed, trackingRotation, rateLimit);
-    } else
-      drive(xSpeed, ySpeed, rotX, rateLimit);
-  }
-
-  /**
-   * A custom method to drive the robot while tracking (facing) a specific heading.
-   * Must be repeatedly called to move yaw
-   *
-   * @param xSpeed        Speed of the robot in the x direction (forward).
-   * @param ySpeed        Speed of the robot in the y direction (sideways).
-   * @param theta         Desired heading of the robot (IN RADIANS!)
-   * @param rateLimit     Whether to enable rate limiting for smoother control.
-   */
-  public void driveTracking(double xSpeed, double ySpeed, double theta, boolean rateLimit)
-  {
-    double currentHeading = Math.toRadians(getGyroYaw()) % (Math.PI * 2.0); // ignore multiples of 2pi (360).
-    double rotSpeed = trackingPid.calculate(currentHeading, theta);
-
-    // for tuning purposes:
-    SmartDashboard.putNumber("tracking setpoint", theta);
-    SmartDashboard.putNumber("tracking value", currentHeading);
-    SmartDashboard.putNumber("applied rot speed", rotSpeed);
-
-    // drive using the calculated rot_speed like normal
-    drive(xSpeed, ySpeed, rotSpeed, rateLimit);
-  }
 
   /**
    * Sets the wheels into an X formation to prevent movement.
@@ -665,11 +616,7 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void enableAlternateRotation() {
     Util.consoleLog();
-
     this.alternateRotation = true;
-    this.trackingPid.reset();
-    this.trackingPid.setTolerance(1);
-
     updateDS();
   }
 
@@ -682,23 +629,6 @@ public class DriveSubsystem extends SubsystemBase {
     alternateRotation = false;
 
     updateDS();
-  }
-
-  /**
-   * Set a pose to track rotation to
-   */
-  public void setTrackingPose(double x, double y) {
-    Util.consoleLog("x=%.2f y=%.2f", x, y);
-
-    trackingPose = new Pose2d(x, y, new Rotation2d(0));
-    trackingField.setRobotPose(trackingPose);
-  }
-
-  /**
-   * Set pose to track to as current robot pose
-   */
-  public void setTrackingPose() {
-    setTrackingPose(getPose().getX(), getPose().getY());
   }
 
   /**
