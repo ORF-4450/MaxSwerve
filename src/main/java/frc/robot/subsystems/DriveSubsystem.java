@@ -125,8 +125,8 @@ public class DriveSubsystem extends SubsystemBase {
                 new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
                         new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                         new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
-                        4.5, // Max module speed, in m/s
-                        0.4, // Drive base radius in meters. Distance from robot center to furthest module.
+                        4.8, // Max module speed, in m/s
+                        0.54, // Drive base radius in meters. Distance from robot center to furthest module.
                         new ReplanningConfig() // Default path replanning config. See the API for the options here
                 ),
                 () -> {
@@ -387,28 +387,15 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void drive(double xSpeed, double ySpeed, double rotX, double rotY, boolean rateLimit) 
   {
-    // for pointing rot joystick at angle to match robot to 
-    if (alternateRotation && fieldRelative) 
-    {
-      // rotX and rotY are backwards because from the drivers perspective they are at 90deg to the field.
-      double theta = Math.atan2(rotX, rotY);
-      double theta_magnitude = Math.sqrt(Math.pow(rotX, 2) + Math.pow(rotY, 2));
-      
-      if (theta_magnitude > 0.2) // don't do anything if the joystick hasn't moved enough
-        driveTracking(xSpeed, ySpeed, theta, rateLimit);
-      else 
-        drive(xSpeed, ySpeed, 0, rateLimit);
-      // if the robot has enabled tracking to a specific pose 
-      // driver has no control over yaw of robot in this "mode"
-    } else if (istracking) {
-        drive(xSpeed, ySpeed, trackingRotation, rateLimit);
-    // just drive like normal, ignoring the rotY component 
+    if (istracking) {
+      drive(xSpeed, ySpeed, trackingRotation, rateLimit);
     } else 
       drive(xSpeed, ySpeed, rotX, rateLimit);
   }
 
   /**
    * A custom method to drive the robot while tracking (facing) a specific heading.
+   * Must be repeatedly called to move yaw
    *
    * @param xSpeed        Speed of the robot in the x direction (forward).
    * @param ySpeed        Speed of the robot in the y direction (sideways).

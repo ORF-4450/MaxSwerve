@@ -25,6 +25,7 @@ import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.FaceAprilTag;
+import frc.robot.commands.PointToYaw;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.Shooter;
@@ -102,7 +103,7 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(driverController.getLeftY(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(driverController.getLeftX(), OIConstants.kDriveDeadband),
                 -MathUtil.applyDeadband(driverController.getRightX(), OIConstants.kDriveDeadband),
-                -MathUtil.applyDeadband(driverController.getRightY(), OIConstants.kDriveDeadband),
+                0,
                 false),
             robotDrive));
     autoChooser = AutoBuilder.buildAutoChooser();
@@ -127,9 +128,16 @@ public class RobotContainer {
 
     // holding top right bumper enables the alternate rotation mode in
     // which the driver points stick to desired heading.
+    // new Trigger(() -> driverController.getRightBumper())
+    //     .whileTrue(new StartEndCommand(robotDrive::enableAlternateRotation,
+    //                                    robotDrive::disableAlternateRotation));
     new Trigger(() -> driverController.getRightBumper())
-        .whileTrue(new StartEndCommand(robotDrive::enableAlternateRotation,
-                                       robotDrive::disableAlternateRotation));
+        .whileTrue(new PointToYaw(
+            ()->PointToYaw.yawFromAxes(
+                -MathUtil.applyDeadband(driverController.getRightX(), OIConstants.kDriveDeadband),
+                -MathUtil.applyDeadband(driverController.getRightY(), OIConstants.kDriveDeadband)
+            ), robotDrive, false
+        ));
 
     // the "A" button (or cross on PS4 controller) toggles tracking mode.
     new Trigger(() -> driverController.getAButton())
@@ -138,12 +146,7 @@ public class RobotContainer {
     // POV buttons do same as alternate driving mode but without any lateral
     // movement and increments of 45deg.
     new Trigger(()-> driverController.getPOV() != -1)
-        .whileTrue(new RunCommand(
-            () -> robotDrive.driveTracking(
-                0,0,
-                povToHeading(driverController.getPOV()),
-                false
-            ), robotDrive));
+        .onTrue(new PointToYaw(()->PointToYaw.yawFromPOV(driverController.getPOV()), robotDrive, false));
 
     // run shooter (manupulator controller)
     new Trigger(() -> manipulatorController.getBButton())
@@ -171,23 +174,4 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         return autoChooser.getSelected();
     }
-  
-  /**
-  * Convert a POV reading (in degrees) to heading (-pi/2 to 0 to pi/2)
-  *
-  * @param pov The POV value
-  * @return The heading in radians
-  */
-  private double povToHeading(double pov) {
-    double radians = Math.toRadians(pov);
-
-    if (radians < -Math.PI) {
-        double overshoot = radians + Math.PI;
-        radians = -overshoot;
-    }
-
-    radians *= -1;
-
-    return radians;
-  }
 }
