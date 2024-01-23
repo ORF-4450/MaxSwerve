@@ -10,6 +10,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix.unmanaged.Unmanaged;
 import com.kauailabs.navx.frc.AHRS;
+<<<<<<< HEAD
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
@@ -17,9 +18,11 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.revrobotics.REVPhysicsSim;
 
 import Team4450.Lib.Util;
+
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -27,7 +30,6 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTable;
@@ -37,7 +39,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.RobotContainer;
 import frc.utils.SwerveUtils;
@@ -95,7 +96,7 @@ public class DriveSubsystem extends SubsystemBase {
   private double currentRotation = 0.0;
   private double currentTranslationDir = 0.0;
   private double currentTranslationMag = 0.0;
-  
+
   private double speedLimiter = 1;
 
   private SlewRateLimiter magLimiter = new SlewRateLimiter(DriveConstants.kMagnitudeSlewRate);
@@ -103,15 +104,31 @@ public class DriveSubsystem extends SubsystemBase {
   private double prevTime = WPIUtilJNI.now() * 1e-6;
 
   // Odometry class for tracking robot pose
-  SwerveDriveOdometry odometry = new SwerveDriveOdometry(
+  // SwerveDriveOdometry odometry = new SwerveDriveOdometry(
+  //     DriveConstants.kDriveKinematics,
+  //     Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
+  //     new SwerveModulePosition[] {
+  //         frontLeft.getPosition(),
+  //         frontRight.getPosition(),
+  //         rearLeft.getPosition(),
+  //         rearRight.getPosition()
+  //     });
+
+  // TODO: Fix the vectors used to set std deviations for measurements. Using default
+  // for now. Not sure how to determine the values.
+  private final SwerveDrivePoseEstimator odometry = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
       Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
-      new SwerveModulePosition[] {
+       new SwerveModulePosition[] {
           frontLeft.getPosition(),
           frontRight.getPosition(),
           rearLeft.getPosition(),
           rearRight.getPosition()
-      });
+        },
+      new Pose2d());
+      // VecBuilder.fill(0.1, 0.1, 0.1),
+      // VecBuilder.fill(0.05),
+      // VecBuilder.fill(0.1, 0.1, 0.1));
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
@@ -160,7 +177,7 @@ public class DriveSubsystem extends SubsystemBase {
    rearLeft.setTranslation2d(new Translation2d(-DriveConstants.kTrackWidth / 2.0, DriveConstants.kTrackWidth / 2.0));
    rearRight.setTranslation2d(new Translation2d(-DriveConstants.kTrackWidth / 2.0, -DriveConstants.kTrackWidth / 2.0));
 
-    if (RobotBase.isSimulation()) 
+    if (RobotBase.isSimulation())
     {
       var dev = SimDeviceDataJNI.getSimDeviceHandle("navX-Sensor[0]");
 
@@ -172,7 +189,7 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putData("TrackingField", trackingField); // to visualize position robot is tracking to
     SmartDashboard.putData("TrackingPid", trackingPid); // for tuning in Shuffleboard
     trackingField.setRobotPose(trackingPose); // add tracking pose to field
-    
+
     SmartDashboard.putData("Field2d", field2d);
 
     resetOdometry(DriveConstants.DEFAULT_STARTING_POSE);
@@ -196,14 +213,14 @@ public class DriveSubsystem extends SubsystemBase {
     SmartDashboard.putString("Robot pose", currentPose.toString());
 
     Transform2d poseOffset = currentPose.minus(lastPose);
-    
+
     double currentDistance = poseOffset.getX() + poseOffset.getY();
     //double currentDistance = Math.sqrt(Math.pow(poseOffset.getX(), 2) + Math.pow(poseOffset.getY(), 2));
 
     distanceTraveled += currentDistance;
 
     SmartDashboard.putNumber("Distance Traveled(m)", distanceTraveled);
-    
+
     // Track gyro yaw to support simulation of resettable yaw.
 
     yawAngle += navx.getAngle() - lastYawAngle;
@@ -215,7 +232,7 @@ public class DriveSubsystem extends SubsystemBase {
     lastPose = currentPose;
 
     field2d.setRobotPose(currentPose);
-    
+
     // Now update the pose of each wheel (module).
     updateModulePose(frontLeft);
     updateModulePose(frontRight);
@@ -229,7 +246,7 @@ public class DriveSubsystem extends SubsystemBase {
    * Called on every scheduler loop when in simulation.
    */
   @Override
-  public void simulationPeriodic() 
+  public void simulationPeriodic()
   {
     // We are not using this call now because the REV simulation does not work
     // correctly. Will leave the code in place in case this issue gets fixed.
@@ -257,7 +274,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @return The pose.
    */
   public Pose2d getPose() {
-    return odometry.getPoseMeters();
+    return odometry.getEstimatedPosition();
   }
 
   /**
@@ -289,15 +306,15 @@ public class DriveSubsystem extends SubsystemBase {
    * @param rot           Angular rate of the robot.
    * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void drive(double xSpeed, double ySpeed, double rot, boolean rateLimit) 
-  {  
+  public void drive(double xSpeed, double ySpeed, double rot, boolean rateLimit)
+  {
     double xSpeedCommanded;
     double ySpeedCommanded;
 
     // Have to invert for sim...not sure why.
     if (RobotBase.isSimulation()) rot *= -1;
 
-    if (rateLimit) 
+    if (rateLimit)
     {
       // Convert XY to polar for rate limiting
       double inputTranslationDir = Math.atan2(ySpeed, xSpeed);
@@ -305,7 +322,7 @@ public class DriveSubsystem extends SubsystemBase {
 
       // Calculate the direction slew rate based on an estimate of the lateral acceleration
       double directionSlewRate;
-      
+
       if (currentTranslationMag != 0.0) {
         directionSlewRate = Math.abs(DriveConstants.kDirectionSlewRate / currentTranslationMag);
       } else {
@@ -315,7 +332,7 @@ public class DriveSubsystem extends SubsystemBase {
       double currentTime = WPIUtilJNI.now() * 1e-6;
       double elapsedTime = currentTime - prevTime;
       double angleDif = SwerveUtils.AngleDifference(inputTranslationDir, currentTranslationDir);
-      
+
       if (angleDif < 0.45*Math.PI) {
         currentTranslationDir = SwerveUtils.StepTowardsCircular(currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
         currentTranslationMag = magLimiter.calculate(inputTranslationMag);
@@ -334,9 +351,9 @@ public class DriveSubsystem extends SubsystemBase {
         currentTranslationDir = SwerveUtils.StepTowardsCircular(currentTranslationDir, inputTranslationDir, directionSlewRate * elapsedTime);
         currentTranslationMag = magLimiter.calculate(0.0);
       }
-      
+
       prevTime = currentTime;
-      
+
       xSpeedCommanded = currentTranslationMag * Math.cos(currentTranslationDir);
       ySpeedCommanded = currentTranslationMag * Math.sin(currentTranslationDir);
 
@@ -367,7 +384,7 @@ public class DriveSubsystem extends SubsystemBase {
     SwerveModuleState swerveModuleStates[] = DriveConstants.kDriveKinematics.toSwerveModuleStates(speeds);
 
     SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, DriveConstants.kMaxSpeedMetersPerSecond);
-    
+
     frontLeft.setDesiredState(swerveModuleStates[0]);
     frontRight.setDesiredState(swerveModuleStates[1]);
     rearLeft.setDesiredState(swerveModuleStates[2]);
@@ -385,11 +402,11 @@ public class DriveSubsystem extends SubsystemBase {
    * @param rotY          Y component of rotation joystick
    * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void drive(double xSpeed, double ySpeed, double rotX, double rotY, boolean rateLimit) 
+  public void drive(double xSpeed, double ySpeed, double rotX, double rotY, boolean rateLimit)
   {
     if (istracking) {
       drive(xSpeed, ySpeed, trackingRotation, rateLimit);
-    } else 
+    } else
       drive(xSpeed, ySpeed, rotX, rateLimit);
   }
 
@@ -402,7 +419,7 @@ public class DriveSubsystem extends SubsystemBase {
    * @param theta         Desired heading of the robot (IN RADIANS!)
    * @param rateLimit     Whether to enable rate limiting for smoother control.
    */
-  public void driveTracking(double xSpeed, double ySpeed, double theta, boolean rateLimit) 
+  public void driveTracking(double xSpeed, double ySpeed, double theta, boolean rateLimit)
   {
     double currentHeading = Math.toRadians(getGyroYaw()) % (Math.PI * 2.0); // ignore multiples of 2pi (360).
     double rotSpeed = trackingPid.calculate(currentHeading, theta);
@@ -466,25 +483,25 @@ public class DriveSubsystem extends SubsystemBase {
     //return gyro.getRate() * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
     return -navx.getRate(); // * (DriveConstants.kGyroReversed ? -1.0 : 1.0);
   }
-  
+
   /**
    * Get Gyro angle in degrees.
    * @return Angle in degrees. 0 to +- 180.
    */
-  public double getGyroYaw() 
+  public double getGyroYaw()
   {
     double angle = Math.IEEEremainder((-navx.getAngle()), 360);
 
     return angle;
   }
-  
+
   /**
    * Get gyro yaw from the angle of the robot at last gyro reset.
    * @return Rotation2D containing Gyro yaw in radians. + is left of zero (ccw) - is right (cw).
    */
-  public Rotation2d getGyroYaw2dx() 
+  public Rotation2d getGyroYaw2dx()
   {
-    if (navx.isMagnetometerCalibrated()) 
+    if (navx.isMagnetometerCalibrated())
     {
      // We will only get valid fused headings if the magnetometer is calibrated
      return Rotation2d.fromDegrees(navx.getFusedHeading());
@@ -507,7 +524,7 @@ public class DriveSubsystem extends SubsystemBase {
         //.rotateBy(getHeadingRotation2d())
         .rotateBy(getPose().getRotation())
         .plus(getPose().getTranslation());
-    
+
     module.setModulePose(
         new Pose2d(modulePosition, module.getAngle2d().plus(Rotation2d.fromDegrees(getGyroYaw()))));
   }
@@ -519,7 +536,7 @@ public class DriveSubsystem extends SubsystemBase {
   private void setField2dModulePoses()
   {
     Pose2d      modulePoses[] = new Pose2d[4];
-    
+
     modulePoses[0] = frontLeft.getPose();
     modulePoses[1] = frontRight.getPose();
     modulePoses[2] = rearLeft.getPose();
@@ -534,7 +551,7 @@ public class DriveSubsystem extends SubsystemBase {
   public void toggleFieldRelative()
   {
       Util.consoleLog();
-    
+
       fieldRelative = !fieldRelative;
 
       updateDS();
@@ -564,7 +581,7 @@ public class DriveSubsystem extends SubsystemBase {
    * encoder on the drive wheel. We can't use the actual wheel encoder
    * because resetting that encoder would crash the swerve drive code.
    * Note: This distance is only accurate for forward/backward and
-   * strafe moves. 
+   * strafe moves.
    * @return
    */
   public double getDistanceTraveled()
@@ -613,10 +630,10 @@ public class DriveSubsystem extends SubsystemBase {
   }
 
   /**
-   * Sets the gyroscope yaw angle to zero. This can be used to set the direction 
+   * Sets the gyroscope yaw angle to zero. This can be used to set the direction
    * the robot is currently facing to the 'forwards' direction.
    */
-  public void zeroGyro() 
+  public void zeroGyro()
   {
     Util.consoleLog();
 
@@ -627,16 +644,16 @@ public class DriveSubsystem extends SubsystemBase {
    * Set drive motor idle mode for each swerve module. Defaults to coast.
    * @param on True to set idle mode to brake, false sets to coast.
    */
-  public void setBrakeMode(boolean on) 
+  public void setBrakeMode(boolean on)
   {
       Util.consoleLog("%b", on);
 
       currentBrakeMode = on;
-    
-      frontLeft.setBrakeMode(on); 
-      frontRight.setBrakeMode(on); 
-      rearLeft.setBrakeMode(on); 
-      rearRight.setBrakeMode(on); 
+
+      frontLeft.setBrakeMode(on);
+      frontRight.setBrakeMode(on);
+      rearLeft.setBrakeMode(on);
+      rearRight.setBrakeMode(on);
 
       updateDS();
   }
@@ -711,7 +728,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     updateDS();
   }
-  
+
   public void enableSlowMode()
   {
     speedLimiter = DriveConstants.kSlowModeFactor;
@@ -726,7 +743,7 @@ public class DriveSubsystem extends SubsystemBase {
     Util.consoleLog();
 
     speedLimiter = 1;
-    
+
     updateDS();
   }
 

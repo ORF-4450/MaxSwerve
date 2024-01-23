@@ -6,10 +6,11 @@ import com.revrobotics.CANSparkLowLevel.MotorType;
 import Team4450.Lib.Util;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.GeneralConstants;
 
 public class Shooter extends SubsystemBase {
-    private CANSparkMax motor1 = new CANSparkMax(9, MotorType.kBrushless);
-    private CANSparkMax motor2 = new CANSparkMax(10, MotorType.kBrushless);
+    private CANSparkMax motor1 = new CANSparkMax(GeneralConstants.kShooterMotor1CanId, MotorType.kBrushless);
+    private CANSparkMax motor2 = new CANSparkMax(GeneralConstants.kShooterMotor2CanId, MotorType.kBrushless);
 
     double motorSpeed = 1;
     boolean isrunning = false;
