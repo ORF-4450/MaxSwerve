@@ -72,7 +72,7 @@ public final class Constants {
     public static final boolean kGyroReversed = false;
 
 	  // Default starting field position in meters for pose tracking. 2024 field.
-	  public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(1.665, 2.541, Rotation2d.fromDegrees(0));
+	  public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(1.38, 5.54, Rotation2d.fromDegrees(0));
   }
 
   public static final class ModuleConstants {

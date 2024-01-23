@@ -2,6 +2,7 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/AprilTag PID": "PIDController",
       "/SmartDashboard/Auto Chooser": "String Chooser",
       "/SmartDashboard/Field2d": "Field2d",
       "/SmartDashboard/Gyro2": "Gyro",
@@ -20,12 +21,7 @@
           "length": 0.4000000059604645,
           "width": 0.4000000059604645
         },
-        "bottom": 544,
-        "builtin": "2024 Crescendo",
         "height": 8.013679504394531,
-        "left": 46,
-        "right": 1088,
-        "top": 36,
         "width": 16.541748046875,
         "window": {
           "visible": true
