@@ -1,7 +1,5 @@
 package frc.robot.commands;
 
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.DoubleSupplier;
 
@@ -40,7 +38,7 @@ public class PointToYaw extends Command {
         double desiredYaw = yawSupplier.getAsDouble();
         pidController.setSetpoint(desiredYaw);
         if (Double.isNaN(desiredYaw)) {
-            Util.consoleLog("no value");
+            robotDrive.setTrackingRotation(Double.NaN);
             return;
         }
 

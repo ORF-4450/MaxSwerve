@@ -291,7 +291,8 @@ public class DriveSubsystem extends SubsystemBase {
     double xSpeedCommanded;
     double ySpeedCommanded;
 
-    if (istracking) rot = trackingRotation; // override joystick value
+    // override joystick value if tracking AND trackingRotation is real
+    if (istracking && !Double.isNaN(trackingRotation)) rot = trackingRotation;
 
     // Have to invert for sim...not sure why.
     if (RobotBase.isSimulation()) rot *= -1;
