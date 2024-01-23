@@ -1,12 +1,13 @@
 package frc.robot.commands;
 
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.DoubleSupplier;
 
 import Team4450.Lib.Util;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.PIDCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.subsystems.DriveSubsystem;
 
@@ -17,6 +18,8 @@ public class PointToYaw extends Command {
     private DriveSubsystem robotDrive;
     private PIDController pidController = new PIDController(1, 0, 0);
     private Set<Subsystem> requirements;
+
+    private static final double NO_VALUE = Double.NaN;
 
     /**
      * Point to yaw
@@ -34,12 +37,19 @@ public class PointToYaw extends Command {
 
     @Override
     public void execute() {
-        pidController.setSetpoint(yawSupplier.getAsDouble());
+        double desiredYaw = yawSupplier.getAsDouble();
+        pidController.setSetpoint(desiredYaw);
+        if (Double.isNaN(desiredYaw)) {
+            Util.consoleLog("no value");
+            return;
+        }
+
         double rotation = pidController.calculate(robotDrive.getYawR());
         if (wait) {
             robotDrive.drive(0,0,rotation,false);
         }
         robotDrive.setTrackingRotation(rotation);
+        Util.consoleLog("%f", rotation);
     }
 
     @Override
@@ -64,6 +74,7 @@ public class PointToYaw extends Command {
 
     @Override
     public void end(boolean interrupted) {
+        Util.consoleLog("ended interrupted: %b", interrupted);
         robotDrive.disableTracking();
         robotDrive.setTrackingRotation(0);
     }
@@ -80,14 +91,18 @@ public class PointToYaw extends Command {
     * @return yaw
     */
     public static double yawFromPOV(double pov) {
-        double radians = Math.toRadians(pov);
+        if (pov < 0)
+            return NO_VALUE;
+        else {
+            double radians = Math.toRadians(pov);
 
-        if (radians < -Math.PI) {
-            double overshoot = radians + Math.PI;
-            radians = -overshoot;
+            if (radians < -Math.PI) {
+                double overshoot = radians + Math.PI;
+                radians = -overshoot;
+            }
+            radians *= -1;
+            return radians;
         }
-        radians *= -1;
-        return radians;
     }
     
     /**
@@ -98,11 +113,13 @@ public class PointToYaw extends Command {
     * @return yaw
     */
     public static double yawFromAxes(double xAxis, double yAxis) {
-        double theta = Math.atan2(xAxis, yAxis);      
-        return theta;
+        double theta = Math.atan2(xAxis, yAxis);
+        double magnitude = Math.sqrt(Math.pow(xAxis, 2) + Math.pow(yAxis, 2));
+        if (magnitude > 0.2) {
+            return theta;
+        } else {
+            return NO_VALUE;
+        }
     }
-    
-    
 
-    // public static double yawFromAxes(y)
 }

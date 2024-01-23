@@ -6,7 +6,6 @@ package frc.robot;
 
 import Team4450.Lib.LibraryVersion;
 import Team4450.Lib.Util;
-import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;

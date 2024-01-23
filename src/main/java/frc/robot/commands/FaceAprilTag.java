@@ -1,7 +1,5 @@
 package frc.robot.commands;
 
-import java.util.function.DoubleSupplier;
-
 import Team4450.Lib.Util;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -15,12 +13,12 @@ public class FaceAprilTag extends PIDCommand {
 
     public FaceAprilTag(PhotonVision camera, DriveSubsystem robotDrive) {
         super(
-            new PIDController(0.15, 0.01, 0.01), // the PID Controller
+            new PIDController(0.001, 0, 0), // the PID Controller
             ()->camera.getYaw(), // measurement
             0, // setpoint
             (o) -> robotDrive.setTrackingRotation(o)
         );
-        getController().setTolerance(0.5);
+        getController().setTolerance(0.3);
         this.robotDrive = robotDrive;
         this.camera = camera;
         SmartDashboard.putData("april_tag_pid", this.getController());
@@ -34,7 +32,7 @@ public class FaceAprilTag extends PIDCommand {
     
     @Override
     public void execute() {
-        Util.consoleLog("value: %f", -camera.getYaw());
+        // Util.consoleLog("camera yaw value: %f", camera.getYaw());
         super.execute();
     }
 

@@ -6,7 +6,8 @@
       "/SmartDashboard/Field2d": "Field2d",
       "/SmartDashboard/Gyro2": "Gyro",
       "/SmartDashboard/TrackingField": "Field2d",
-      "/SmartDashboard/TrackingPid": "PIDController"
+      "/SmartDashboard/TrackingPid": "PIDController",
+      "/SmartDashboard/april_tag_pid": "PIDController"
     },
     "windows": {
       "/SmartDashboard/Field2d": {

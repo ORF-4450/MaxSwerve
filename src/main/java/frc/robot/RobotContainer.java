@@ -9,20 +9,9 @@ import Team4450.Lib.Util;
 import Team4450.Lib.XboxController;
 
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
-import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 //import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.PS4Controller.Button;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.AutoConstants;
-import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.PointToYaw;
@@ -33,14 +22,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-import java.util.List;
-
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 
 /*
  * This class is where the bulk of the robot should be declared.  Since Command-based is a
@@ -146,7 +131,7 @@ public class RobotContainer {
     // POV buttons do same as alternate driving mode but without any lateral
     // movement and increments of 45deg.
     new Trigger(()-> driverController.getPOV() != -1)
-        .onTrue(new PointToYaw(()->PointToYaw.yawFromPOV(driverController.getPOV()), robotDrive, false));
+        .onTrue(new PointToYaw(()->PointToYaw.yawFromPOV(driverController.getPOV()), robotDrive, true));
 
     // run shooter (manupulator controller)
     new Trigger(() -> manipulatorController.getBButton())

@@ -5,17 +5,13 @@
 package frc.robot.subsystems;
 
 import org.photonvision.PhotonCamera;
-import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
 
 import com.ctre.phoenix.unmanaged.Unmanaged;
 import com.kauailabs.navx.frc.AHRS;
-<<<<<<< HEAD
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.revrobotics.REVPhysicsSim;
 
 import Team4450.Lib.Util;
 
@@ -32,9 +28,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.util.WPIUtilJNI;
-import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
