@@ -4,7 +4,6 @@
 
 package frc.robot.subsystems;
 
-import org.photonvision.PhotonCamera;
 
 import com.ctre.phoenix.unmanaged.Unmanaged;
 import com.kauailabs.navx.frc.AHRS;
@@ -17,7 +16,6 @@ import Team4450.Lib.Util;
 
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -39,8 +37,6 @@ import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class DriveSubsystem extends SubsystemBase {
-
-  PhotonCamera camera = new PhotonCamera("4450-LL");
   // Create MAXSwerveModules
   private final MAXSwerveModule frontLeft = new MAXSwerveModule(
       DriveConstants.kFrontLeftDrivingCanId,
