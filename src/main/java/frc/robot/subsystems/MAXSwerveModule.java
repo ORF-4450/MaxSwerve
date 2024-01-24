@@ -14,7 +14,6 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVPhysicsSim;
@@ -44,7 +43,7 @@ public class MAXSwerveModule implements Sendable {
   //private SwerveModuleState desiredState = new SwerveModuleState(0.0, new Rotation2d());
 
   private double            currentSimVelocity, currentSimPosition, currentSimAngle;
-  private String            moduleLocation;
+  public String            moduleLocation;
   private Pose2d            pose;
   private Translation2d     translation2d;
 
@@ -108,7 +107,7 @@ public class MAXSwerveModule implements Sendable {
     drivingPIDController.setD(ModuleConstants.kDrivingD);
     drivingPIDController.setFF(ModuleConstants.kDrivingFF);
     drivingPIDController.setOutputRange(ModuleConstants.kDrivingMinOutput,
-        ModuleConstants.kDrivingMaxOutput);
+                                        ModuleConstants.kDrivingMaxOutput);
 
     // Set the PID gains for the turning motor. Note these are example gains, and you
     // may need to tune them for your own robot!
@@ -117,7 +116,7 @@ public class MAXSwerveModule implements Sendable {
     turningPIDController.setD(ModuleConstants.kTurningD);
     turningPIDController.setFF(ModuleConstants.kTurningFF);
     turningPIDController.setOutputRange(ModuleConstants.kTurningMinOutput,
-        ModuleConstants.kTurningMaxOutput);
+                                        ModuleConstants.kTurningMaxOutput);
 
     drivingSparkMax.setIdleMode(ModuleConstants.kDrivingMotorIdleMode);
     turningSparkMax.setIdleMode(ModuleConstants.kTurningMotorIdleMode);
