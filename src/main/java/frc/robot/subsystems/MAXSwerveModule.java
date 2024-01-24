@@ -107,7 +107,7 @@ public class MAXSwerveModule implements Sendable {
     drivingPIDController.setD(ModuleConstants.kDrivingD);
     drivingPIDController.setFF(ModuleConstants.kDrivingFF);
     drivingPIDController.setOutputRange(ModuleConstants.kDrivingMinOutput,
-        ModuleConstants.kDrivingMaxOutput);
+                                        ModuleConstants.kDrivingMaxOutput);
 
     // Set the PID gains for the turning motor. Note these are example gains, and you
     // may need to tune them for your own robot!
@@ -116,7 +116,7 @@ public class MAXSwerveModule implements Sendable {
     turningPIDController.setD(ModuleConstants.kTurningD);
     turningPIDController.setFF(ModuleConstants.kTurningFF);
     turningPIDController.setOutputRange(ModuleConstants.kTurningMinOutput,
-        ModuleConstants.kTurningMaxOutput);
+                                        ModuleConstants.kTurningMaxOutput);
 
     drivingSparkMax.setIdleMode(ModuleConstants.kDrivingMotorIdleMode);
     turningSparkMax.setIdleMode(ModuleConstants.kTurningMotorIdleMode);

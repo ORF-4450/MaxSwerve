@@ -30,6 +30,8 @@ public class FaceAprilTag extends Command {
 
     @Override
     public void initialize() {
+        Util.consoleLog();
+
         robotDrive.enableTracking();
     }
     
@@ -59,7 +61,7 @@ public class FaceAprilTag extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        Util.consoleLog("interrupted %b", interrupted);
+        Util.consoleLog("interrupted=%b", interrupted);
         this.robotDrive.disableTracking();
         SmartDashboard.putBoolean("Has AprilTag", false);
         SmartDashboard.putNumber("AprilTag ID", 0);

@@ -38,7 +38,7 @@ public class RobotContainer {
   // The robot's subsystems
   private final DriveSubsystem  robotDrive;
   private final Shooter         shooter;
-  private final PhotonVision    camera;
+  private final PhotonVision    photonVision;
 
   // The driver's controller
   XboxController driverController = new XboxController(OIConstants.kDriverControllerPort);
@@ -66,13 +66,13 @@ public class RobotContainer {
 
     navx = NavX.getInstance(NavX.PortType.SPI);
 
-    // Add navx as a Sendable. Updates the dashboard heading indicator automatically.
+    // Add navx as a Sendable. Updates the dashboard heading indhotonicator automatically.
     
     SmartDashboard.putData("Gyro2", navx);
 
     robotDrive = new DriveSubsystem();
     shooter = new Shooter();
-    camera = new PhotonVision();
+    photonVision = new PhotonVision();
 
     // Configure the button bindings
 
@@ -90,7 +90,9 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(driverController.getRightX(), OIConstants.kDriveDeadband),
                 false),
             robotDrive));
+
     autoChooser = AutoBuilder.buildAutoChooser();
+
     SmartDashboard.putData("Auto Chooser", autoChooser);
   }
 
@@ -105,6 +107,8 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     Util.consoleLog();
+
+    // Driver controller buttons.
 
     // Holding Left bumper brakes and sets X pattern to stop movement.
     new Trigger(() -> driverController.getLeftBumper())
@@ -125,7 +129,7 @@ public class RobotContainer {
 
     // the "A" button (or cross on PS4 controller) toggles tracking mode.
     new Trigger(() -> driverController.getAButton())
-        .toggleOnTrue(new FaceAprilTag(camera, robotDrive));
+        .toggleOnTrue(new FaceAprilTag(photonVision, robotDrive));
 
     // POV buttons do same as alternate driving mode but without any lateral
     // movement and increments of 45deg.
@@ -147,6 +151,8 @@ public class RobotContainer {
     // toggle slow-mode
     new Trigger(() -> driverController.getLeftTrigger())
         .whileTrue(new StartEndCommand(robotDrive::enableSlowMode, robotDrive::disableSlowMode));
+
+    // Utility/manipulator controller buttons --------------------------------------------------
 
   }
 

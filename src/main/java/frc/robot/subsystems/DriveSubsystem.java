@@ -10,6 +10,7 @@ import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
+import com.revrobotics.CANSparkBase.IdleMode;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 
 import Team4450.Lib.Util;
@@ -32,6 +33,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.ModuleConstants;
 import frc.robot.RobotContainer;
 import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -120,32 +122,6 @@ public class DriveSubsystem extends SubsystemBase {
   public DriveSubsystem() {
     Util.consoleLog("max vel=%.2f m/s", DriveConstants.kMaxSpeedMetersPerSecond);
 
-         AutoBuilder.configureHolonomic(
-                this::getPose, // Robot pose supplier
-                this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
-                this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                this::driveChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-                new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
-                        new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-                        new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
-                        DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
-                        Math.sqrt(2 * Math.pow(DriveConstants.kTrackWidth/2, 2)), // Drive base radius in meters. Distance from robot center to furthest module.
-                        new ReplanningConfig() // Default path replanning config. See the API for the options here
-                ),
-                () -> {
-                    // Boolean supplier that controls when the path will be mirrored for the red alliance
-                    // This will flip the path being followed to the red side of the field.
-                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-                    var alliance = DriverStation.getAlliance();
-                    if (alliance.isPresent()) {
-                        return alliance.get() == DriverStation.Alliance.Red;
-                    }
-                    return false;
-                },
-                this // Reference to this subsystem to set requirements
-        );
-
     // This thread will wait a bit and then reset the navx while this constructor
     // continues to run. We do this because we have to wait a bit to reset the
     // navx after creating it.
@@ -172,7 +148,11 @@ public class DriveSubsystem extends SubsystemBase {
 
     SmartDashboard.putData("Field2d", field2d);
 
+    if (ModuleConstants.kDrivingMotorIdleMode == IdleMode.kBrake) currentBrakeMode = true;
+
     resetOdometry(DriveConstants.DEFAULT_STARTING_POSE);
+
+    configureAutoBuilder();
   }
 
   @Override
@@ -356,6 +336,7 @@ public class DriveSubsystem extends SubsystemBase {
         fieldRelative
             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered, Rotation2d.fromDegrees(getGyroYaw()))
             : new ChassisSpeeds(xSpeedDelivered, ySpeedDelivered, rotDelivered);
+
     driveChassisSpeeds(chassisSpeeds);
   }
 
@@ -363,6 +344,7 @@ public class DriveSubsystem extends SubsystemBase {
   public ChassisSpeeds getChassisSpeeds() {
     return this.chassisSpeeds;
   }
+
   public void driveChassisSpeeds(ChassisSpeeds speeds) {
     SwerveModuleState swerveModuleStates[] = DriveConstants.kDriveKinematics.toSwerveModuleStates(speeds);
 
@@ -605,6 +587,8 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void toggleBrakeMode()
   {
+    Util.consoleLog("%b", !currentBrakeMode);
+
     setBrakeMode(!currentBrakeMode);
   }
 
@@ -613,7 +597,9 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void enableAlternateRotation() {
     Util.consoleLog();
+
     this.alternateRotation = true;
+    
     updateDS();
   }
 
@@ -674,5 +660,38 @@ public class DriveSubsystem extends SubsystemBase {
    */
   public void setTrackingRotation(double commandedRotation) {
     this.trackingRotation = commandedRotation;
+  }
+
+  private void configureAutoBuilder() {
+    Util.consoleLog();
+
+    AutoBuilder.configureHolonomic(
+      this::getPose, // Robot pose supplier
+      this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
+      this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+      this::driveChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+      new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
+              new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+              new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
+              DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
+              Math.sqrt(2 * Math.pow(DriveConstants.kTrackWidth/2, 2)), // Drive base radius in meters. Distance from robot center to furthest module.
+              new ReplanningConfig() // Default path replanning config. See the API for the options here
+      ),
+      () -> {
+          // Boolean supplier that controls when the path will be mirrored for the red alliance
+          // This will flip the path being followed to the red side of the field.
+          // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+          // RICH use global alliance info.
+          var alliance = DriverStation.getAlliance();
+          
+          if (alliance.isPresent()) {
+              return alliance.get() == DriverStation.Alliance.Red;
+          }
+
+          return false;
+      },
+      this // Reference to this subsystem to set requirements
+    );
   }
 }

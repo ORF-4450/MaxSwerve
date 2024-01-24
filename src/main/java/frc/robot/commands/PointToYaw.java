@@ -10,12 +10,11 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.subsystems.DriveSubsystem;
 
 public class PointToYaw extends Command {
-    private DoubleSupplier yawSupplier;
-
-    private boolean wait;
-    private DriveSubsystem robotDrive;
-    private PIDController pidController = new PIDController(1, 0, 0);
-    private Set<Subsystem> requirements;
+    private DoubleSupplier  yawSupplier;
+    private boolean         wait;
+    private DriveSubsystem  robotDrive;
+    private PIDController   pidController = new PIDController(1, 0, 0);
+    private Set<Subsystem>  requirements;
 
     private static final double NO_VALUE = Double.NaN;
 
@@ -27,17 +26,21 @@ public class PointToYaw extends Command {
      */
     public PointToYaw(DoubleSupplier yawSupplier, DriveSubsystem robotDrive, boolean wait) {
         Util.consoleLog();
+
         this.yawSupplier = yawSupplier;
         this.robotDrive = robotDrive;
         this.wait = wait;
         this.requirements = Set.of();
+
         if (wait) this.requirements = Set.of(robotDrive);
     }
 
     @Override
     public void execute() {
         double desiredYaw = yawSupplier.getAsDouble();
+
         pidController.setSetpoint(desiredYaw);
+
         if (Double.isNaN(desiredYaw)) {
             robotDrive.setTrackingRotation(desiredYaw);
             if (wait) robotDrive.drive(0,0,0,false);
@@ -45,10 +48,13 @@ public class PointToYaw extends Command {
         }
 
         double rotation = pidController.calculate(robotDrive.getYawR());
+
         if (wait) {
             robotDrive.drive(0,0,rotation,false);
         }
+
         robotDrive.setTrackingRotation(rotation);
+
     }
 
     @Override
@@ -66,6 +72,8 @@ public class PointToYaw extends Command {
 
     @Override
     public void initialize() {
+        Util.consoleLog();
+
         // pidController.setTolerance(.1);
         pidController.enableContinuousInput(-Math.PI, Math.PI);
         robotDrive.enableTracking();
@@ -74,6 +82,7 @@ public class PointToYaw extends Command {
     @Override
     public void end(boolean interrupted) {
         Util.consoleLog("ended interrupted: %b", interrupted);
+
         robotDrive.disableTracking();
         robotDrive.setTrackingRotation(0);
     }
@@ -84,9 +93,9 @@ public class PointToYaw extends Command {
     }
 
     /**
-    * generate a yaw from a POV value
+    * Generate a yaw from a POV value.
     *
-    * @param pov The POV value
+    * @param pov The POV value.
     * @return yaw
     */
     public static double yawFromPOV(double pov) {
@@ -99,6 +108,7 @@ public class PointToYaw extends Command {
                 double overshoot = radians + Math.PI;
                 radians = -overshoot;
             }
+
             radians *= -1;
             return radians;
         }
@@ -114,11 +124,11 @@ public class PointToYaw extends Command {
     public static double yawFromAxes(double xAxis, double yAxis) {
         double theta = Math.atan2(xAxis, yAxis);
         double magnitude = Math.sqrt(Math.pow(xAxis, 2) + Math.pow(yAxis, 2));
+
         if (magnitude > 0.2) {
             return theta;
         } else {
             return NO_VALUE;
         }
     }
-
 }

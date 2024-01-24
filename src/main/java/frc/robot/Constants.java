@@ -26,7 +26,7 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static final String     kProgramName = "MaxSwerveCW-01.23.24-2";
+  public static final String     kProgramName = "MaxSwerveRC-01.24.24-1";
 
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
@@ -72,7 +72,7 @@ public final class Constants {
     public static final boolean kGyroReversed = false;
 
 	  // Default starting field position in meters for pose tracking. 2024 field.
-	  public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(1.38, 5.54, Rotation2d.fromDegrees(0));
+	  public static final Pose2d	DEFAULT_STARTING_POSE = new Pose2d(1.660, 7.101, Rotation2d.fromDegrees(0));
   }
 
   public static final class ModuleConstants {
