@@ -14,7 +14,6 @@ import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.util.sendable.SendableRegistry;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.REVPhysicsSim;
@@ -44,7 +43,7 @@ public class MAXSwerveModule implements Sendable {
   //private SwerveModuleState desiredState = new SwerveModuleState(0.0, new Rotation2d());
 
   private double            currentSimVelocity, currentSimPosition, currentSimAngle;
-  private String            moduleLocation;
+  public String            moduleLocation;
   private Pose2d            pose;
   private Translation2d     translation2d;
 
