@@ -128,8 +128,8 @@ public class DriveSubsystem extends SubsystemBase {
                 new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
                         new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                         new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
-                        4.8, // Max module speed, in m/s
-                        0.54, // Drive base radius in meters. Distance from robot center to furthest module.
+                        DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
+                        Math.sqrt(2 * Math.pow(DriveConstants.kTrackWidth/2, 2)), // Drive base radius in meters. Distance from robot center to furthest module.
                         new ReplanningConfig() // Default path replanning config. See the API for the options here
                 ),
                 () -> {
@@ -668,7 +668,11 @@ public class DriveSubsystem extends SubsystemBase {
     updateDS();
   }
 
-  public void setTrackingRotation(double o) {
-    this.trackingRotation = o;
+  /**
+   * set an override right joystick value for tracking
+   * @param commandedRotation the "joystick value"
+   */
+  public void setTrackingRotation(double commandedRotation) {
+    this.trackingRotation = commandedRotation;
   }
 }

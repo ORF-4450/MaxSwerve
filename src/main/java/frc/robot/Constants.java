@@ -26,12 +26,12 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static final String     kProgramName = "MaxSwerveCW-01.22.24-2";
+  public static final String     kProgramName = "MaxSwerveCW-01.23.24-2";
 
   public static final class DriveConstants {
     // Driving Parameters - Note that these are not the maximum capable speeds of
     // the robot, rather the allowed maximum speeds
-    public static final double kMaxSpeedMetersPerSecond = 4.0;
+    public static final double kMaxSpeedMetersPerSecond = 4.8;
     public static final double kMaxAngularSpeed = 2 * Math.PI; // radians per second.
     public static final double kSlowModeFactor = .15; // 15% of normal.
 

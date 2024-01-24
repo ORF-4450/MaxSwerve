@@ -26,6 +26,7 @@ public class PointToYaw extends Command {
      * @param wait whether or not to wait until it is completed to drive again
      */
     public PointToYaw(DoubleSupplier yawSupplier, DriveSubsystem robotDrive, boolean wait) {
+        Util.consoleLog();
         this.yawSupplier = yawSupplier;
         this.robotDrive = robotDrive;
         this.wait = wait;
@@ -38,7 +39,8 @@ public class PointToYaw extends Command {
         double desiredYaw = yawSupplier.getAsDouble();
         pidController.setSetpoint(desiredYaw);
         if (Double.isNaN(desiredYaw)) {
-            robotDrive.setTrackingRotation(Double.NaN);
+            robotDrive.setTrackingRotation(desiredYaw);
+            if (wait) robotDrive.drive(0,0,0,false);
             return;
         }
 
@@ -47,7 +49,6 @@ public class PointToYaw extends Command {
             robotDrive.drive(0,0,rotation,false);
         }
         robotDrive.setTrackingRotation(rotation);
-        Util.consoleLog("%f", rotation);
     }
 
     @Override
