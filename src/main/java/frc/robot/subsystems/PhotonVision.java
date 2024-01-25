@@ -239,14 +239,17 @@ public class PhotonVision extends SubsystemBase
 	}
     
     /**
-     * returns an Optional value of the robot's field-centric pose given current
-     * tags that it sees.
-     * @return the Optional pose (empty optional means no pose or uncertain/bad pose)
+     * returns an Optional value of the robot's estimated 
+     * field-centric pose given current tags that it sees.
+     * (and also the timestamp)
+     * 
+     * @return the Optional estimated pose (empty optional means no pose or uncertain/bad pose)
      */
-    public Optional<Pose2d> getEstimatedPose() {
+    public Optional<EstimatedRobotPose> getEstimatedPose() {
         Optional<EstimatedRobotPose> estimatedPoseOptional = poseEstimator.update();
         if (estimatedPoseOptional.isPresent()) {
-            Pose3d pose = estimatedPoseOptional.get().estimatedPose;
+            EstimatedRobotPose estimatedPose = estimatedPoseOptional.get();
+            Pose3d pose = estimatedPose.estimatedPose;
 
             // pose2d to pose3d (ignore the Z axis which is height off ground)
             Pose2d pose2d = new Pose2d(pose.getX(), pose.getY(), new Rotation2d(pose.getRotation().getAngle()));
@@ -256,9 +259,14 @@ public class PhotonVision extends SubsystemBase
 
             // logic for checking if pose is valid would go here:
             // for example:
-            // if (bad pose) {return Optional.empty}
+            for (int i=0;i<estimatedPose.targetsUsed.size();i++) {
+                // if a target was used with ID > 16 then return no estimated pose
+                if (estimatedPose.targetsUsed.get(i).getFiducialId() > 16) {
+                    return Optional.empty();
+                }
+            }
 
-            return Optional.of(pose2d);
+            return Optional.of(estimatedPose);
         } else return Optional.empty();
     }
 }
