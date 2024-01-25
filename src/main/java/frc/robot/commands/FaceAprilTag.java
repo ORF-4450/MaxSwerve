@@ -8,37 +8,19 @@ import Team4450.Lib.Util;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-<<<<<<< HEAD
-import edu.wpi.first.wpilibj2.command.PIDCommand;
-import frc.robot.subsystems.DriveBase;
-import frc.robot.subsystems.PhotonVision;
-
-public class FaceAprilTag extends PIDCommand {
-    DriveBase  robotDrive;
-    PhotonVision    camera;
-
-    public FaceAprilTag(PhotonVision camera, DriveBase robotDrive) {
-        super(
-            new PIDController(0.001, 0, 0), // the PID Controller
-            ()->camera.getYaw(), // measurement
-            0, // setpoint
-            (o) -> robotDrive.setTrackingRotation(camera.hasTargets() ? o : Double.NaN)
-        );
-=======
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.AprilTagNames;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.DriveBase;
 import frc.robot.subsystems.PhotonVision;
 
 
 public class FaceAprilTag extends Command {
-    DriveSubsystem robotDrive;
+    DriveBase robotDrive;
     PhotonVision photonVision;
     PIDController pidController = new PIDController(0.01, 0, 0);
     AprilTagNames tagNames = new AprilTagNames(Alliance.Red);
->>>>>>> d22f4c209d7ae745136e67698e015eb4bc6e21f8
 
-    public FaceAprilTag(PhotonVision cameraSubsystem, DriveSubsystem robotDrive) {
+    public FaceAprilTag(PhotonVision cameraSubsystem, DriveBase robotDrive) {
         Util.consoleLog();
 
         // tolerance is in degrees

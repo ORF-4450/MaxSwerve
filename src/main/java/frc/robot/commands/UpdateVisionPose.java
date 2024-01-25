@@ -9,13 +9,13 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.DriveBase;
 import frc.robot.subsystems.PhotonVision;
 
 
 public class UpdateVisionPose extends Command {
     PhotonVision cameraSubsystem;
-    DriveSubsystem robotDrive;
+    DriveBase robotDrive;
     Set<Subsystem> requirements;
     
     /**
@@ -24,7 +24,7 @@ public class UpdateVisionPose extends Command {
      * @param cameraSubsystem the PhotonVision subsystem in use
      * @param robotDrive the drive base
      */
-    public UpdateVisionPose(PhotonVision cameraSubsystem, DriveSubsystem robotDrive) {
+    public UpdateVisionPose(PhotonVision cameraSubsystem, DriveBase robotDrive) {
         this.cameraSubsystem = cameraSubsystem;
         this.robotDrive = robotDrive;
 

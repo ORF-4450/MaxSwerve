@@ -12,13 +12,8 @@ import frc.robot.subsystems.DriveBase;
 public class PointToYaw extends Command {
     private DoubleSupplier  yawSupplier;
     private boolean         wait;
-<<<<<<< HEAD
-    private DriveBase  robotDrive;
-    private PIDController   pidController = new PIDController(1, 0, 0);
-=======
-    private DriveSubsystem  robotDrive;
+    private DriveBase       robotDrive;
     private PIDController   pidController = new PIDController(0.5, 0, 0);
->>>>>>> d22f4c209d7ae745136e67698e015eb4bc6e21f8
     private Set<Subsystem>  requirements;
 
     private static final double NO_VALUE = Double.NaN;

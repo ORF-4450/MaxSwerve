@@ -4,13 +4,13 @@ import Team4450.Lib.Util;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.DriveBase;
 import frc.robot.subsystems.PhotonVision;
 
 public class DriveToNote extends Command {
     PIDController rotationController = new PIDController(0.01, 0, 0); // for rotating drivebase
     PIDController translationController = new PIDController(0.1, 0, 0); // for moving drivebase in X,Y plane
-    DriveSubsystem robotDrive;
+    DriveBase robotDrive;
     PhotonVision photonVision;
 
     /**
@@ -18,7 +18,7 @@ public class DriveToNote extends Command {
      * @param robotDrive the robot drive base
      * @param photonVision the photonvision subsystem
      */
-    public DriveToNote(DriveSubsystem robotDrive, PhotonVision photonVision) {
+    public DriveToNote(DriveBase robotDrive, PhotonVision photonVision) {
         this.robotDrive = robotDrive;
         this.photonVision = photonVision;
 
