@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.PointToYaw;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.DriveBase;
 import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -36,7 +36,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 public class RobotContainer {
 
   // The robot's subsystems
-  private final DriveSubsystem  robotDrive;
+  private final DriveBase  robotDrive;
   private final Shooter         shooter;
   private final PhotonVision    photonVision;
 
@@ -70,7 +70,7 @@ public class RobotContainer {
     
     SmartDashboard.putData("Gyro2", navx);
 
-    robotDrive = new DriveSubsystem();
+    robotDrive = new DriveBase();
     shooter = new Shooter();
     photonVision = new PhotonVision();
 

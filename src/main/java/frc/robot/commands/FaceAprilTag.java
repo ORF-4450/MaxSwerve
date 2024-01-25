@@ -4,14 +4,14 @@ import Team4450.Lib.Util;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.PIDCommand;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.DriveBase;
 import frc.robot.subsystems.PhotonVision;
 
 public class FaceAprilTag extends PIDCommand {
-    DriveSubsystem  robotDrive;
+    DriveBase  robotDrive;
     PhotonVision    camera;
 
-    public FaceAprilTag(PhotonVision camera, DriveSubsystem robotDrive) {
+    public FaceAprilTag(PhotonVision camera, DriveBase robotDrive) {
         super(
             new PIDController(0.001, 0, 0), // the PID Controller
             ()->camera.getYaw(), // measurement

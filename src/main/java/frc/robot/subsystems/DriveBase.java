@@ -35,11 +35,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.ModuleConstants;
+import frc.robot.utility.SwerveUtils;
 import frc.robot.RobotContainer;
-import frc.utils.SwerveUtils;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class DriveSubsystem extends SubsystemBase {
+public class DriveBase extends SubsystemBase {
   // Create MAXSwerveModules
   private final MAXSwerveModule frontLeft = new MAXSwerveModule(
       DriveConstants.kFrontLeftDrivingCanId,
@@ -120,7 +120,7 @@ public class DriveSubsystem extends SubsystemBase {
       // VecBuilder.fill(0.1, 0.1, 0.1));
 
   /** Creates a new DriveSubsystem. */
-  public DriveSubsystem() {
+  public DriveBase() {
     Util.consoleLog("max vel=%.2f m/s", DriveConstants.kMaxSpeedMetersPerSecond);
 
     // This thread will wait a bit and then reset the navx while this constructor

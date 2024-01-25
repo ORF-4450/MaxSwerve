@@ -7,12 +7,12 @@ import Team4450.Lib.Util;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
-import frc.robot.subsystems.DriveSubsystem;
+import frc.robot.subsystems.DriveBase;
 
 public class PointToYaw extends Command {
     private DoubleSupplier  yawSupplier;
     private boolean         wait;
-    private DriveSubsystem  robotDrive;
+    private DriveBase  robotDrive;
     private PIDController   pidController = new PIDController(1, 0, 0);
     private Set<Subsystem>  requirements;
 
@@ -24,7 +24,7 @@ public class PointToYaw extends Command {
      * @param robotDrive the drive subsystem
      * @param wait whether or not to wait until it is completed to drive again
      */
-    public PointToYaw(DoubleSupplier yawSupplier, DriveSubsystem robotDrive, boolean wait) {
+    public PointToYaw(DoubleSupplier yawSupplier, DriveBase robotDrive, boolean wait) {
         Util.consoleLog();
 
         this.yawSupplier = yawSupplier;
