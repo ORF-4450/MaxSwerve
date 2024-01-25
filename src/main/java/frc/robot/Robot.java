@@ -139,7 +139,7 @@ public class Robot extends TimedRobot {
     // telop with LW enabled.
 
     LiveWindow.enableAllTelemetry();
-    
+
     teleopInit();
 
     CommandScheduler.getInstance().enable();
