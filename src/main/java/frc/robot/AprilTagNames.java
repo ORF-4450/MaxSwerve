@@ -19,7 +19,7 @@ public class AprilTagNames {
     public final int TRAP_RIGHT;
 
     public AprilTagNames(Alliance alliance) {
-        if (alliance == Alliance.Red) {
+        if (alliance == Alliance.Blue) {
             SOURCE_RIGHT = 1;
             SOURCE_LEFT = 2;
             AMP = 6;

@@ -493,10 +493,7 @@ public class DriveSubsystem extends SubsystemBase {
   private void updateDS()
   {
       SmartDashboard.putBoolean("Field Relative", fieldRelative);
-      SmartDashboard.putBoolean("Brakes on", currentBrakeMode);
-      SmartDashboard.putBoolean("Alternate Drive", alternateRotation);
-      SmartDashboard.putBoolean("Tracking", istracking);
-      SmartDashboard.putNumber("Speed Factor", speedLimiter);
+ Factor", speedLimiter);
   }
 
   /**
@@ -693,5 +690,9 @@ public class DriveSubsystem extends SubsystemBase {
       },
       this // Reference to this subsystem to set requirements
     );
+  }
+
+  public void updateOdometryVision(Pose2d pose, double timestamp) {
+    odometry.addVisionMeasurement(pose, timestamp);
   }
 }

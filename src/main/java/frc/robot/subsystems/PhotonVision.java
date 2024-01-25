@@ -2,14 +2,26 @@ package frc.robot.subsystems;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.common.hardware.VisionLEDMode;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import Team4450.Lib.Util;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class PhotonVision extends SubsystemBase
@@ -18,11 +30,29 @@ public class PhotonVision extends SubsystemBase
     private PhotonPipelineResult    latestResult;
     private VisionLEDMode           ledMode = VisionLEDMode.kOff;
 
+    private Field2d field = new Field2d();
+
+    // adams code ==========
+    private final AprilTagFields fields = AprilTagFields.k2024Crescendo;
+    private AprilTagFieldLayout FIELD_LAYOUT;
+    private PhotonPoseEstimator poseEstimator;
+
+    // end adams code=============
+
 	public PhotonVision() 
 	{
+        FIELD_LAYOUT = fields.loadAprilTagLayoutField();
+        poseEstimator = new PhotonPoseEstimator(
+            FIELD_LAYOUT,
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
+            camera,
+            new Transform3d()
+        );
         setLedMode(ledMode);
 
 		Util.consoleLog("PhotonVision created!");
+
+        SmartDashboard.putData(field);
 	}
 
     /**
@@ -205,5 +235,17 @@ public class PhotonVision extends SubsystemBase
         builder.addBooleanProperty("has Targets", () -> hasTargets(), null);
         builder.addDoubleProperty("target yaw", () -> getYaw(), null);
         builder.addDoubleProperty("target area", () -> getArea(), null);
-	}   	
+	}
+    
+    // TODO: document
+    public Optional<Pose2d> getEstimatedPose() {
+        Optional<EstimatedRobotPose> estimatedPoseOptional = poseEstimator.update();
+        if (estimatedPoseOptional.isPresent()) {
+            EstimatedRobotPose estimatedPose = estimatedPoseOptional.get();
+            Pose3d pose = estimatedPose.estimatedPose;
+            Pose2d pose2d = new Pose2d(pose.getX(), pose.getY(), new Rotation2d(pose.getRotation().getAngle()));
+            field.setRobotPose(pose2d);
+            return Optional.of(pose2d);
+        } else return Optional.empty();
+    }
 }

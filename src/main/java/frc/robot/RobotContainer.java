@@ -15,11 +15,13 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.PointToYaw;
+import frc.robot.commands.UpdateVisionPose;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -90,7 +92,8 @@ public class RobotContainer {
                 -MathUtil.applyDeadband(driverController.getRightX(), OIConstants.kDriveDeadband),
                 false),
             robotDrive));
-
+    
+    
     autoChooser = AutoBuilder.buildAutoChooser();
 
     SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -108,6 +111,8 @@ public class RobotContainer {
   private void configureButtonBindings() {
     Util.consoleLog();
 
+    new Trigger(()->driverController.getBButton()).toggleOnTrue(new UpdateVisionPose(photonVision, robotDrive));
+    
     // Driver controller buttons.
 
     // Holding Left bumper brakes and sets X pattern to stop movement.

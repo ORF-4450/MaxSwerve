@@ -18,14 +18,14 @@ public class FaceAprilTag extends Command {
     DriveSubsystem robotDrive;
     PhotonVision camera;
     PIDController pidController = new PIDController(0.01, 0, 0);
-    AprilTagNames tagNames = new AprilTagNames(Alliance.Blue);
+    AprilTagNames tagNames = new AprilTagNames(Alliance.Red);
 
     public FaceAprilTag(PhotonVision camera, DriveSubsystem robotDrive) {
         Util.consoleLog();
         pidController.setTolerance(0.3);
         this.robotDrive = robotDrive;
         this.camera = camera;
-        SmartDashboard.putData("AprilTag PID", pidController);
+        SmartDashboard.putData("AprilTag Rotate PID", pidController);
     }
 
     @Override
