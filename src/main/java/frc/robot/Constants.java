@@ -40,17 +40,22 @@ public final class Constants {
     public static final double kRotationalSlewRate = 2.0; // percent per second (1 = 100%).
 
     // Chassis configuration
+
+    // Distance between centers of right and left wheels
     public static final double kTrackWidth = Units.inchesToMeters(29);
-    // Distance between centers of right and left wheels on robot
+    // Distance between front and back wheel centers
     public static final double kWheelBase = Units.inchesToMeters(29);
-    // Distance between front and back wheels on robot
+    // Drive base radius in meters. Distance from robot center to furthest module.
+    public static final double kDriveBaseRadius = .54;
+
     public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
         new Translation2d(kWheelBase / 2, kTrackWidth / 2),
         new Translation2d(kWheelBase / 2, -kTrackWidth / 2),
         new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
         new Translation2d(-kWheelBase / 2, -kTrackWidth / 2));
 
-    // Angular offsets of the modules relative to the chassis in radians
+    // Angular offsets of the modules relative to the chassis in radians at
+    // alignment/start up.
     public static final double kFrontLeftChassisAngularOffset = -Math.PI / 2;
     public static final double kFrontRightChassisAngularOffset = 0;
     public static final double kBackLeftChassisAngularOffset = Math.PI;
@@ -89,6 +94,7 @@ public final class Constants {
     public static final double kDrivingMotorFreeSpeedRps = NeoMotorConstants.kFreeSpeedRpm / 60;
     public static final double kWheelDiameterMeters = 0.0762;
     public static final double kWheelCircumferenceMeters = kWheelDiameterMeters * Math.PI;
+
     // 45 teeth on the wheel's bevel gear, 22 teeth on the first-stage spur gear, 15 teeth on the bevel pinion
     public static final double kDrivingMotorReduction = (45.0 * 22) / (kDrivingMotorPinionTeeth * 15);
     public static final double kDriveWheelFreeSpeedRps = (kDrivingMotorFreeSpeedRps * kWheelCircumferenceMeters)
@@ -96,6 +102,7 @@ public final class Constants {
 
     public static final double kDrivingEncoderPositionFactor = (kWheelDiameterMeters * Math.PI)
         / kDrivingMotorReduction; // meters
+
     public static final double kDrivingEncoderVelocityFactor = ((kWheelDiameterMeters * Math.PI)
         / kDrivingMotorReduction) / 60.0; // meters per second
 
@@ -142,6 +149,8 @@ public final class Constants {
     public static final double kPYController = 1;
     public static final double kPThetaController = 1;
 
+    public static final double kHolonomicPathFollowerP = 5.0;
+    
     // Constraint for the motion profiled robot angle controller
     public static final TrapezoidProfile.Constraints kThetaControllerConstraints = new TrapezoidProfile.Constraints(
         kMaxAngularSpeedRadiansPerSecond, kMaxAngularSpeedRadiansPerSecondSquared);

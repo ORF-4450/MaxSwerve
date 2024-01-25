@@ -33,8 +33,6 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    DataLogManager.start();
-    DriverStation.startDataLog(DataLogManager.getLog());
     
     // Set up our custom logger.
 
@@ -144,7 +142,7 @@ public class Robot extends TimedRobot {
     // telop with LW enabled.
 
     LiveWindow.enableAllTelemetry();
-    
+
     teleopInit();
 
     CommandScheduler.getInstance().enable();

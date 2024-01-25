@@ -43,7 +43,7 @@ public class MAXSwerveModule implements Sendable {
   //private SwerveModuleState desiredState = new SwerveModuleState(0.0, new Rotation2d());
 
   private double            currentSimVelocity, currentSimPosition, currentSimAngle;
-  public String            moduleLocation;
+  public String             moduleLocation;
   private Pose2d            pose;
   private Translation2d     translation2d;
 
@@ -106,6 +106,7 @@ public class MAXSwerveModule implements Sendable {
     drivingPIDController.setI(ModuleConstants.kDrivingI);
     drivingPIDController.setD(ModuleConstants.kDrivingD);
     drivingPIDController.setFF(ModuleConstants.kDrivingFF);
+
     drivingPIDController.setOutputRange(ModuleConstants.kDrivingMinOutput,
                                         ModuleConstants.kDrivingMaxOutput);
 
@@ -115,6 +116,7 @@ public class MAXSwerveModule implements Sendable {
     turningPIDController.setI(ModuleConstants.kTurningI);
     turningPIDController.setD(ModuleConstants.kTurningD);
     turningPIDController.setFF(ModuleConstants.kTurningFF);
+    
     turningPIDController.setOutputRange(ModuleConstants.kTurningMinOutput,
                                         ModuleConstants.kTurningMaxOutput);
 

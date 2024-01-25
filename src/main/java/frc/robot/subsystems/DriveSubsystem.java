@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.ModuleConstants;
 import frc.robot.RobotContainer;
@@ -669,10 +670,10 @@ public class DriveSubsystem extends SubsystemBase {
       this::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
       this::driveChassisSpeeds, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
       new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
-              new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-              new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
-              4.8, // Max module speed, in m/s
-              0.54, // Drive base radius in meters. Distance from robot center to furthest module.
+              new PIDConstants(AutoConstants.kHolonomicPathFollowerP, 0.0, 0.0), // Translation PID constants
+              new PIDConstants(AutoConstants.kHolonomicPathFollowerP, 0.0, 0.0), // Rotation PID constants
+              DriveConstants.kMaxSpeedMetersPerSecond, // Max module speed, in m/s
+              DriveConstants.kDriveBaseRadius, // Drive base radius in meters. Distance from robot center to furthest module.
               new ReplanningConfig() // Default path replanning config. See the API for the options here
       ),
       () -> {
