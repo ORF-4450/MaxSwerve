@@ -17,6 +17,7 @@ import Team4450.Lib.Util;
 
 import edu.wpi.first.hal.SimDouble;
 import edu.wpi.first.hal.simulation.SimDeviceDataJNI;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -102,8 +103,7 @@ public class DriveSubsystem extends SubsystemBase {
   //         rearRight.getPosition()
   //     });
 
-  // TODO: Fix the vectors used to set std deviations for measurements. Using default
-  // for now. Not sure how to determine the values.
+
   private final SwerveDrivePoseEstimator odometry = new SwerveDrivePoseEstimator(
       DriveConstants.kDriveKinematics,
       Rotation2d.fromDegrees(getGyroYaw()), //gyro.getAngle()),
@@ -113,10 +113,13 @@ public class DriveSubsystem extends SubsystemBase {
           rearLeft.getPosition(),
           rearRight.getPosition()
         },
-      new Pose2d());
-      // VecBuilder.fill(0.1, 0.1, 0.1),
-      // VecBuilder.fill(0.05),
-      // VecBuilder.fill(0.1, 0.1, 0.1));
+        DriveConstants.DEFAULT_STARTING_POSE,
+        // Standard Deviations and Tuning of estimator follows:
+        // see bottom of: https://docs.wpilib.org/en/stable/docs/software/advanced-controls/state-space/state-space-pose-estimators.html
+        //   format is:  X    Y         Theta
+        VecBuilder.fill(0.1, 0.1, Math.toRadians(1)), // std deviations of encoder states (higher = less encoders more vision)
+        VecBuilder.fill(1.2, 1.2, Math.toRadians(10)) // std deviations of vision inputs (higher = less vision more enoders)
+      );
 
   /** Creates a new DriveSubsystem. */
   public DriveSubsystem() {
@@ -150,7 +153,8 @@ public class DriveSubsystem extends SubsystemBase {
 
     if (ModuleConstants.kDrivingMotorIdleMode == IdleMode.kBrake) currentBrakeMode = true;
 
-    resetOdometry(DriveConstants.DEFAULT_STARTING_POSE);
+    // commenting this out because it is configured in SwerveDrivePoseEstimator instead
+    // resetOdometry(DriveConstants.DEFAULT_STARTING_POSE);
 
     configureAutoBuilder();
   }
@@ -256,6 +260,29 @@ public class DriveSubsystem extends SubsystemBase {
       lastPose = pose;
 
       navx.reset();
+  }
+
+  /**
+   * Method to drive the robot using robot-relative speeds all the time.
+   * This is useful for targeting objects like game elements because the code
+   * can use this to drive camera-relative rather than field-relative.
+   * (this method wraps the regular {@code drive(...)} method)
+   * @param xSpeed        Speed of the robot in the x direction (forward).
+   * @param ySpeed        Speed of the robot in the y direction (sideways).
+   * @param rot           Angular rate of the robot.
+   */
+  public void driveRobotRelative(double xSpeed, double ySpeed, double rot) {
+    // store the previous state of field-relative toggle to restore later
+    boolean previousState = this.fieldRelative;
+    this.fieldRelative = false;
+    updateDS();
+
+    // drive using the relative speeds/joystick values
+    drive(xSpeed, ySpeed, rot, false);
+
+    // restore previous state
+    this.fieldRelative = previousState;
+    updateDS();
   }
 
   /**
@@ -493,7 +520,10 @@ public class DriveSubsystem extends SubsystemBase {
   private void updateDS()
   {
       SmartDashboard.putBoolean("Field Relative", fieldRelative);
- Factor", speedLimiter);
+      SmartDashboard.putBoolean("Brakes on", currentBrakeMode);
+      SmartDashboard.putBoolean("Alternate Drive", alternateRotation);
+      SmartDashboard.putBoolean("Tracking", istracking);
+      SmartDashboard.putNumber("Speed Factor", speedLimiter);
   }
 
   /**

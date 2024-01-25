@@ -16,15 +16,17 @@ import frc.robot.subsystems.PhotonVision;
 
 public class FaceAprilTag extends Command {
     DriveSubsystem robotDrive;
-    PhotonVision camera;
+    PhotonVision photonVision;
     PIDController pidController = new PIDController(0.01, 0, 0);
     AprilTagNames tagNames = new AprilTagNames(Alliance.Red);
 
-    public FaceAprilTag(PhotonVision camera, DriveSubsystem robotDrive) {
+    public FaceAprilTag(PhotonVision cameraSubsystem, DriveSubsystem robotDrive) {
         Util.consoleLog();
+
+        // tolerance is in degrees
         pidController.setTolerance(0.3);
         this.robotDrive = robotDrive;
-        this.camera = camera;
+        this.photonVision = cameraSubsystem;
         SmartDashboard.putData("AprilTag Rotate PID", pidController);
     }
 
@@ -37,22 +39,33 @@ public class FaceAprilTag extends Command {
     
     @Override
     public void execute() {
-        ArrayList<Integer> tags = camera.getTrackedIDs();
+        // get an arralist of all the tags IDs that the camera currently sees
+        ArrayList<Integer> tags = photonVision.getTrackedIDs();
         PhotonTrackedTarget target;
 
-        if (tags.contains(tagNames.SPEAKER_MAIN)) {
-            target = camera.getTarget(tagNames.SPEAKER_MAIN);
-        } else if (tags.contains(tagNames.AMP)) {
-            target = camera.getTarget(tagNames.AMP);
-        } else if (tags.size() > 0) {
-            target = camera.getTarget(tags.get(0));
-        } else {
+        // first prioritize the center speaker tag if it is in view
+        if (tags.contains(tagNames.SPEAKER_MAIN)) target = photonVision.getTarget(tagNames.SPEAKER_MAIN);
+
+        // next try finding the amp tag
+        else if (tags.contains(tagNames.AMP))target = photonVision.getTarget(tagNames.AMP);
+
+        // finally, default to the first tag that isn't the center speaker or amp
+        // could be offset speaker, trap source, etc, other alliance, etc.
+        else if (tags.size() > 0) target = photonVision.getTarget(tags.get(0));
+
+        // otherwise tell drivebase to set NaN as rotation to let driver override commanded
+        // rotation to reorient the robot manually
+        else {
             robotDrive.setTrackingRotation(Double.NaN);
             SmartDashboard.putBoolean("Has AprilTag", false);
             return;
         }
 
+        // attempt to use PID controller to make target yaw approach 0 degrees
         double output = pidController.calculate(target.getYaw(), 0);
+
+        // override joystick rotation input and use the PID output to turn
+        // the robot instead
         robotDrive.setTrackingRotation(output);
 
         SmartDashboard.putNumber("AprilTag ID", target.getFiducialId());

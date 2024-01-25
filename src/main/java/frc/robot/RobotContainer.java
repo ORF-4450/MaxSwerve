@@ -9,10 +9,10 @@ import Team4450.Lib.Util;
 import Team4450.Lib.XboxController;
 
 import edu.wpi.first.math.MathUtil;
-//import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
+import frc.robot.commands.DriveToNote;
 import frc.robot.commands.FaceAprilTag;
 import frc.robot.commands.PointToYaw;
 import frc.robot.commands.UpdateVisionPose;
@@ -21,7 +21,6 @@ import frc.robot.subsystems.PhotonVision;
 import frc.robot.subsystems.Shooter;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RepeatCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -80,8 +79,13 @@ public class RobotContainer {
 
     configureButtonBindings();
 
-    // Configure default commands
+    // Configure default commands:
 
+    // This sets up the photonVision subsystem to constantly update the robotDrive odometry
+    // with AprilTags (if it sees them)
+    photonVision.setDefaultCommand(new UpdateVisionPose(photonVision, robotDrive));
+
+    // default drive command
     robotDrive.setDefaultCommand(
         // The left stick controls translation of the robot.
         // Turning is controlled by the X axis of the right stick.
@@ -110,10 +114,8 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     Util.consoleLog();
-
-    new Trigger(()->driverController.getBButton()).toggleOnTrue(new UpdateVisionPose(photonVision, robotDrive));
     
-    // Driver controller buttons.
+    // Driver controller buttons ---------------------------------
 
     // Holding Left bumper brakes and sets X pattern to stop movement.
     new Trigger(() -> driverController.getLeftBumper())
@@ -121,9 +123,6 @@ public class RobotContainer {
 
     // holding top right bumper enables the alternate rotation mode in
     // which the driver points stick to desired heading.
-    // new Trigger(() -> driverController.getRightBumper())
-    //     .whileTrue(new StartEndCommand(robotDrive::enableAlternateRotation,
-    //                                    robotDrive::disableAlternateRotation));
     new Trigger(() -> driverController.getRightBumper())
         .whileTrue(new PointToYaw(
             ()->PointToYaw.yawFromAxes(
@@ -136,14 +135,14 @@ public class RobotContainer {
     new Trigger(() -> driverController.getAButton())
         .toggleOnTrue(new FaceAprilTag(photonVision, robotDrive));
 
+    // the "B" button tracks Notes.
+    new Trigger(() -> driverController.getBButton())
+        .toggleOnTrue(new DriveToNote(robotDrive, photonVision));
+
     // POV buttons do same as alternate driving mode but without any lateral
     // movement and increments of 45deg.
     new Trigger(()-> driverController.getPOV() != -1)
         .onTrue(new PointToYaw(()->PointToYaw.yawFromPOV(driverController.getPOV()), robotDrive, true));
-
-    // run shooter (manupulator controller)
-    new Trigger(() -> manipulatorController.getBButton())
-        .whileTrue(new StartEndCommand(shooter::start, shooter::stop, shooter));
 
     // reset field orientation
     new Trigger(() -> driverController.getStartButton())
@@ -159,6 +158,9 @@ public class RobotContainer {
 
     // Utility/manipulator controller buttons --------------------------------------------------
 
+    // run shooter (manupulator controller)
+    new Trigger(() -> manipulatorController.getBButton())
+        .whileTrue(new StartEndCommand(shooter::start, shooter::stop, shooter));
   }
 
   /**

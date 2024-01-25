@@ -42,11 +42,12 @@ public class PhotonVision extends SubsystemBase
 	public PhotonVision() 
 	{
         FIELD_LAYOUT = fields.loadAprilTagLayoutField();
+        // setup the AprilTag pose etimator
         poseEstimator = new PhotonPoseEstimator(
             FIELD_LAYOUT,
-            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-            camera,
-            new Transform3d()
+            PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR, // strategy to use for tag to pose calculation
+            camera, // the PhotonCamera
+            new Transform3d() // a series of transformations from Camera pos. to robot pos. (where camera is on robot)
         );
         setLedMode(ledMode);
 
@@ -237,14 +238,26 @@ public class PhotonVision extends SubsystemBase
         builder.addDoubleProperty("target area", () -> getArea(), null);
 	}
     
-    // TODO: document
+    /**
+     * returns an Optional value of the robot's field-centric pose given current
+     * tags that it sees.
+     * @return the Optional pose (empty optional means no pose or uncertain/bad pose)
+     */
     public Optional<Pose2d> getEstimatedPose() {
         Optional<EstimatedRobotPose> estimatedPoseOptional = poseEstimator.update();
         if (estimatedPoseOptional.isPresent()) {
-            EstimatedRobotPose estimatedPose = estimatedPoseOptional.get();
-            Pose3d pose = estimatedPose.estimatedPose;
+            Pose3d pose = estimatedPoseOptional.get().estimatedPose;
+
+            // pose2d to pose3d (ignore the Z axis which is height off ground)
             Pose2d pose2d = new Pose2d(pose.getX(), pose.getY(), new Rotation2d(pose.getRotation().getAngle()));
+
+            // update the field2d object in NetworkTables to visualize where the camera thinks it's at
             field.setRobotPose(pose2d);
+
+            // logic for checking if pose is valid would go here:
+            // for example:
+            // if (bad pose) {return Optional.empty}
+
             return Optional.of(pose2d);
         } else return Optional.empty();
     }
